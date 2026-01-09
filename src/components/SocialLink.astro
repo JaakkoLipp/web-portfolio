@@ -1,0 +1,12 @@
+---
+const { href= "#", label } = Astro.props as { href: string; label: string };
+---
+
+<a
+  href={href}
+  class="text-sm link"
+  target="_blank"
+  rel="noopener noreferrer"
+>
+  {label}
+</a>

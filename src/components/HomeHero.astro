@@ -1,0 +1,100 @@
+---
+import { Image } from "astro:assets";
+import avatar from "../assets/avatar.jpg";
+
+const name = "Jaakko";
+const primary = "Hey, I\'m";
+const secondary = "I build software and operate self-hosted infra.";
+/* I build, ship, and operate.
+I build and operate software systems.
+I build software, infrastructure, and tooling.
+I build, ship, and host software systems.
+I build systems from code to cloud.
+I build end-to-end software systems.
+I build reliable software systems.
+I build and operate software systems. */
+
+const proof = "Linux · Kubernetes · Java · CI/CD · Observability";
+
+const socials = [
+  { label: "LinkedIn", href: "https://www.linkedin.com/in/jaakko-lipponen/" },
+  { label: "GitHub", href: "https://github.com/JaakkoLipp" },
+  { label: "E-mail", href: "mailto:jaakko.lippone01@gmail.com" },
+];
+---
+
+<section class="mt-6">
+  <div class="hidden items-center gap-6 sm:flex">
+  <div class="shrink-0 rounded-full ring-2 ring-app overflow-hidden h-24 w-24">
+    <Image
+      src={avatar}
+      alt="Avatar"
+      width={96}
+      height={96}
+      class="h-full w-full object-cover object-center"
+      loading="eager"
+    />
+  </div>
+
+    <div class="min-w-0">
+      <h1 class="text-3xl font-semibold tracking-tight text-app">
+        {primary} <span class="text-app">{name}</span>.
+        <span class="text-muted"> {secondary}</span>
+      </h1>
+      <p class="mt-2 text-sm text-muted">
+        {proof}
+      </p>
+
+      <div class="mt-3 flex flex-wrap gap-x-5 gap-y-2">
+        {socials.map((s) => (
+          <a
+            href={s.href}
+            class="text-sm link"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            {s.label}
+          </a>
+        ))}
+      </div>
+    </div>
+  </div>
+
+  <div class="sm:hidden">
+    <div class="flex justify-center">
+    <div class="shrink-0 rounded-full ring-2 ring-app overflow-hidden h-28 w-28">
+      <Image
+        src={avatar}
+        alt="Avatar"
+        width={112}
+        height={112}
+        class="h-full w-full object-cover object-center"
+        loading="eager"
+      />
+    </div>
+
+    </div>
+
+    <h1 class="mt-8 text-center text-3xl font-semibold tracking-tight text-app">
+      {primary} <span class="text-app">{name}</span>.
+      <span class="text-muted"> {secondary}</span>
+    </h1>
+
+    <p class="mt-3 text-center text-sm text-muted">
+    {proof}
+    </p>
+
+    <div class="mt-8 space-y-4">
+      {socials.map((s) => (
+        <a
+          href={s.href}
+          class="text-sm link flex items-center gap-3 transition-colors"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          <span class="text-base">{s.label}</span>
+        </a>
+      ))}
+    </div>
+  </div>
+</section>

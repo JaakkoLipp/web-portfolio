@@ -1,0 +1,21 @@
+---
+import type { Post } from "../lib/posts";
+import { formatDate } from "../lib/posts";
+
+const { post } = Astro.props as { post: Post };
+---
+
+<article class="space-y-2">
+  <a href={`/blog/${post.slug}`} class="group inline-flex items-center gap-3">
+    <span class="text-l">{post.icon ?? "📝"}</span>
+     <span class="text-xl font-semibold tracking-tight text-app group-hover:underline decoration-zinc-600">
+        {post.title}
+    </span>
+  </a>
+
+  <div class="text-sm font-semibold tracking-[0.08em] text-zinc-500">
+    {formatDate(post.date)} · {post.minutes} min{post.tag ? <> · {post.tag}</> : null}
+  </div>
+
+  {post.excerpt ? <p class="max-w-[65ch] text-zinc-400">{post.excerpt}</p> : null}
+</article>

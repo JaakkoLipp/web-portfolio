@@ -1,14 +1,29 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
+import HomeHero from "../components/HomeHero.astro";
+import PostListItem from "../components/PostListItem.astro";
+import { getAllPosts } from "../lib/posts";
+const posts = (await getAllPosts()).slice(0, 3);
 ---
 
-<BaseLayout title="YOUR NAME">
-  <div class="py-6">
-    <h1 class="text-3xl font-semibold tracking-tight text-zinc-100">
-      Layout MVP.
-    </h1>
-    <p class="mt-4 text-zinc-400">
-      TODO: build the landing hero (avatar + intro + socials) and recent posts.
-    </p>
+<BaseLayout title="Jaakko Lipponen">
+  <div class="pb-10">
+    <HomeHero />
+
+    <section class="mt-14">
+      <h2 class="text-xs font-semibold tracking-[0.22em] text-muted">
+        RECENT POSTS
+      </h2>
+
+      <div class="mt-6 space-y-10">
+        {posts.map((p) => <PostListItem post={p} />)}
+      </div>
+
+      <div class="mt-10">
+        <a href="/blog" class="text-sm link">
+          Read more posts →
+        </a>
+      </div>
+    </section>
   </div>
 </BaseLayout>

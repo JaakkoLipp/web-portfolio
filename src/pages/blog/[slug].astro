@@ -1,0 +1,53 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import { getCollection, render } from "astro:content";
+import { formatDate } from "../../lib/posts";
+
+export async function getStaticPaths() {
+  const posts = await getCollection("posts");
+  return posts.map((p) => ({
+    params: { slug: p.id },
+    props: { post: p },
+  }));
+}
+
+const { post } = Astro.props;
+
+// Converts markdown -> HTML + exposes <Content />
+const { Content } = await render(post);
+
+const title = post.data.title;
+const d = post.data.date;
+const iso = typeof d === "string" ? d : d.toISOString();
+
+// minutes: recompute here to avoid needing to pass it through
+import readingTime from "reading-time";
+const minutes = Math.max(1, Math.round(readingTime(post.body ?? "").minutes));
+const tag = post.data.tag;
+const icon = post.data.icon ?? "📝";
+---
+
+<BaseLayout title={title}>
+  <div class="pb-14">
+    <header class="mt-2">
+      <div class="inline-flex items-center gap-3">
+        <span class="text-2xl">{icon}</span>
+        <h1 class="text-4xl font-semibold tracking-tight text-app">{title}</h1>
+      </div>
+
+      <div class="mt-3 text-sm font-semibold tracking-[0.08em] text-muted2">
+        {formatDate(iso)} · {minutes} min{tag ? <> · {tag}</> : null}
+      </div>
+    </header>
+
+<article class="prose prose-invert prose-theme mt-10 max-w-none dark-only">
+  <Content />
+</article>
+
+<article class="prose prose-theme mt-10 max-w-none light-only">
+  <Content />
+</article>
+
+
+  </div>
+</BaseLayout>

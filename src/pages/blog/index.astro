@@ -1,0 +1,17 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import PostListItem from "../../components/PostListItem.astro";
+import { getAllPosts } from "../../lib/posts";
+
+const posts = await getAllPosts();
+---
+
+<BaseLayout title="Blog">
+  <div class="pb-10">
+    <h1 class="text-3xl font-semibold tracking-tight text-app">Blog</h1>
+
+    <div class="mt-8 space-y-10">
+      {posts.map((p) => <PostListItem post={p} />)}
+    </div>
+  </div>
+</BaseLayout>

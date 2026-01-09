@@ -1,0 +1,36 @@
+<button
+  id="theme-toggle"
+  class="inline-flex h-9 w-9 items-center justify-center rounded-full border border-app bg-app text-app hover:[--bg-alpha:0.6]"
+  aria-label="Toggle theme"
+  title="Toggle theme"
+  type="button"
+  style="--bg-alpha:0.4"
+>
+  <span id="theme-icon">☀</span>
+</button>
+
+<script>
+  const root = document.documentElement;
+  const btn = document.getElementById("theme-toggle");
+  const icon = document.getElementById("theme-icon");
+
+  function syncIcon() {
+    const t = root.classList.contains("light") ? "light" : "dark";
+    if (icon) icon.textContent = t === "dark" ? "☀" : "☾";
+  }
+
+  function setTheme(theme: "light" | "dark") {
+    root.classList.toggle("dark", theme === "dark");
+    root.classList.toggle("light", theme === "light");
+    root.style.colorScheme = theme;
+    localStorage.setItem("theme", theme);
+    syncIcon();
+  }
+
+  syncIcon();
+
+  btn?.addEventListener("click", () => {
+    const next: "light" | "dark" = root.classList.contains("light") ? "dark" : "light";
+    setTheme(next);
+  });
+</script>
