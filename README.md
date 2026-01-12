@@ -1,4 +1,4 @@
-````md
+
 # Portfolio (Astro + Tailwind v4 + Markdown Blog)
 
 Developer portfolio + Markdown blog inspired by www.conordewey.com.  
@@ -53,7 +53,7 @@ src/
     icons/
       *.svg
 ```
-````
+
 
 ## Content: Writing Posts
 
