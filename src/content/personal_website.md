@@ -1,8 +1,8 @@
 ---
 title: "Building This Portfolio: design constraints, delivery pipeline, and engineering tradeoffs"
-date: 2026-01-12
-tag: "portfolio", "astro", "tailwind", "nginx", "cicd", "devops", "design-systems"
-icon: "🛠️👨‍💻💡"
+date: "2026-01-12"
+tag: "Project"
+icon: "🛠️"
 excerpt: "A short write-up on how this site was designed and shipped: Astro + Markdown content, deliberate UI constraints, and a CI/CD → Nginx deploy flow."
 ---
 
