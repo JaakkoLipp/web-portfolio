@@ -15,7 +15,7 @@ The homepage is an Arch Linux TTY-style terminal: an auto-typed intro, then an i
 - `src/content/projects/*.md`: one file per project. Each one becomes a page and an executable in the terminal.
 - `src/content/writing/*.md`: blog posts.
 - `src/lib/terminal-data.ts`: turns config and content into the JSON the terminal reads.
-- `src/scripts/terminal/`: the terminal island (vanilla JS).
+- `src/scripts/terminal/`: the terminal island (vanilla JS). Easter egg jokes live here, next to their behavior.
 - `src/styles/tokens.css`: the palette (Rosé Pine main) and type tokens.
 
 ## Interview before you build
