@@ -5,7 +5,7 @@ import { site } from '../site.config';
 import { getTerminalData, toScriptJson } from '../lib/terminal-data';
 
 const data = await getTerminalData();
-const { owner, links, pages, machine } = site;
+const { owner, links, pages } = site;
 const manName = owner.short.toLowerCase();
 const dock = [
   ...pages.filter((p) => p.dock).map((p) => ({ label: p.id, cmd: `open ${p.id}` })),

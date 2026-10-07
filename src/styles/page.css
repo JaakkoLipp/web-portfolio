@@ -71,6 +71,8 @@ code {
   border-radius: 4px;
 }
 pre {
+  font-family: inherit;
+  font-variation-settings: inherit;
   margin: 0 0 1.2rem;
   padding: 0.9rem 1.1rem;
   background: var(--bg-2);
@@ -81,6 +83,8 @@ pre {
   font-size: 0.92em;
 }
 pre code { background: none; color: var(--fg); padding: 0; font-size: 1em; }
+/* Shiki sets an inline background; keep the raised surface. */
+pre.astro-code { background-color: var(--bg-2) !important; }
 blockquote { margin: 0 0 1rem; padding-left: 2ch; border-left: 2px solid var(--iris); color: var(--dim); }
 
 /* Entry lists (projects, posts) */
@@ -91,7 +95,7 @@ blockquote { margin: 0 0 1rem; padding-left: 2ch; border-left: 2px solid var(--i
 .entry-title { font-weight: 650; }
 .entry-title a { color: var(--fg); text-decoration: none; }
 .entry-title a:hover { color: var(--accent); }
-.entry-title .exe { color: var(--iris); }
+.exe { color: var(--iris); }
 .entry-meta { color: var(--dim); font-size: 0.9em; }
 .entry-summary { margin: 0.3rem 0 0; color: var(--dim); }
 
@@ -114,9 +118,8 @@ blockquote { margin: 0 0 1rem; padding-left: 2ch; border-left: 2px solid var(--i
   padding-bottom: 2.4rem;
   border-top: 1px solid var(--hl-med);
   color: var(--dim);
-  font-size: 0.9em;
 }
-.site-footer p { margin: 0 0 0.4rem; }
+.site-footer p { margin: 0 0 0.4rem; font-size: 0.9em; }
 
 @media (prefers-reduced-motion: no-preference) {
   .brand-cur { animation: blink 1.06s steps(1) infinite; }

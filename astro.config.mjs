@@ -5,4 +5,7 @@ export default defineConfig({
   site: 'https://jaalip.com',
   output: 'static',
   build: { inlineStylesheets: 'auto' },
+  markdown: {
+    shikiConfig: { theme: 'rose-pine' },
+  },
 });

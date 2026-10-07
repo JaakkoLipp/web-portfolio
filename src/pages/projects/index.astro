@@ -1,0 +1,31 @@
+---
+import Page from '../../layouts/Page.astro';
+import { getProjects, fmtDate } from '../../lib/content';
+import { page } from '../../lib/pages';
+
+const info = page('projects');
+const projects = await getProjects();
+---
+
+<Page title={info.title} description={info.blurb} path="~/projects">
+  <h1>{info.title}</h1>
+  <p class="lead">{info.blurb}</p>
+  <ul class="entries">
+    {projects.map((p) => (
+      <li>
+        <div class="entry-head">
+          <span class="entry-title">
+            <a href={`/projects/${p.id}`}>{p.data.title}</a>
+          </span>
+          <span class="entry-meta">
+            {p.data.status && <span class={`status-${p.data.status}`}>{p.data.status}</span>}
+            {p.data.status && p.data.date && ' · '}
+            {p.data.date && <time datetime={fmtDate(p.data.date)}>{fmtDate(p.data.date)}</time>}
+          </span>
+        </div>
+        <p class="entry-summary">{p.data.summary}</p>
+        <p class="entry-meta"><span class="exe">{p.id}*</span>{p.data.context && <> · {p.data.context}</>}</p>
+      </li>
+    ))}
+  </ul>
+</Page>

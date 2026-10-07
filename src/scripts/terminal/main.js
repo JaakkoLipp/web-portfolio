@@ -1,5 +1,5 @@
 /* Entry point: input handling, execution, key bindings, clock. */
-import { RM, S, TOUCH, clear, el, esc, flush, hooks, print, printText, promptHTML, scroll, showInput, wait } from './state.js';
+import { D, RM, S, TOUCH, clear, el, esc, flush, hooks, print, printText, promptHTML, scroll, showInput, wait } from './state.js';
 import { complete, dispatch } from './commands.js';
 import { intro, isReturning } from './intro.js';
 
@@ -132,5 +132,9 @@ function tick() {
 tick();
 setInterval(tick, 15000);
 
+/* /?run=<project> runs that project after the intro. Project pages link here. */
+const run = new URLSearchParams(location.search).get('run');
+if (run && D.projects.some((p) => p.id === run)) S.queued = run;
+
 /* Returning visitors skip the boot log but still get the fetch card. */
-intro({ boot: !isReturning(), auto: true });
+intro({ boot: !isReturning() && !S.queued, auto: true });

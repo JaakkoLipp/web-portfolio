@@ -1,0 +1,29 @@
+---
+import Page from '../../layouts/Page.astro';
+import { render } from 'astro:content';
+import { getPosts, fmtDate, type Post } from '../../lib/content';
+
+export async function getStaticPaths() {
+  const posts = await getPosts();
+  return posts.map((entry) => ({ params: { id: entry.id }, props: { entry } }));
+}
+
+interface Props { entry: Post }
+const { entry } = Astro.props;
+const { Content } = await render(entry);
+const d = entry.data;
+---
+
+<Page title={d.title} description={d.description} path={`~/writing/${entry.id}.md`}>
+  <article>
+    <h1>{d.title}</h1>
+    <p class="lead">
+      <time datetime={fmtDate(d.date)}>{fmtDate(d.date)}</time>
+      {d.updated && <> · updated <time datetime={fmtDate(d.updated)}>{fmtDate(d.updated)}</time></>}
+      {d.tags.length > 0 && <> · {d.tags.join(', ')}</>}
+    </p>
+    <Content />
+  </article>
+  <hr />
+  <p><a href="/writing">All posts</a></p>
+</Page>
