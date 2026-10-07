@@ -1,20 +1,24 @@
 {
-  "name": "web-portfolio",
+  "name": "jaalip-site",
   "type": "module",
-  "version": "0.0.1",
+  "version": "1.0.0",
+  "private": true,
+  "engines": {
+    "node": ">=22.12.0"
+  },
   "scripts": {
     "dev": "astro dev",
     "build": "astro build",
     "preview": "astro preview",
+    "check": "astro check && node scripts/check-budget.mjs",
     "astro": "astro"
   },
   "dependencies": {
-    "@tailwindcss/vite": "^4.1.18",
-    "astro": "^5.16.8",
-    "reading-time": "^1.5.0",
-    "tailwindcss": "^4.1.18"
+    "@fontsource-variable/martian-mono": "^5.3.0",
+    "astro": "^7.3.6"
   },
   "devDependencies": {
-    "@tailwindcss/typography": "^0.5.19"
+    "@astrojs/check": "^0.9.10",
+    "typescript": "^5.9.3"
   }
 }
