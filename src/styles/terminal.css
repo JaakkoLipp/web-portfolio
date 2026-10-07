@@ -1,0 +1,275 @@
+/* Terminal homepage. Ported from docs/reference/jaalip-tty.html. Colors come from tokens.css. */
+:root {
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+html { height: 100%; scroll-padding-top: env(safe-area-inset-top, 0px); }
+body.tty {
+  height: 100%;
+  overflow: hidden;
+  font-size: clamp(0.76rem, 0.68rem + 0.36vw, 0.93rem);
+  line-height: 1.55;
+}
+
+#app { height: 100%; }
+#term {
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+  padding: 1.1rem clamp(0.85rem, 3vw, 2rem) calc(6.2rem + env(safe-area-inset-bottom, 0px));
+  scrollbar-width: thin;
+  scrollbar-color: var(--hl-med) transparent;
+}
+#screen { max-width: 96ch; }
+
+.ln { white-space: pre-wrap; overflow-wrap: anywhere; min-height: 1.55em; }
+.ln.block { white-space: normal; }
+.tty pre { margin: 0; font: inherit; font-variation-settings: inherit; }
+.scroll-x { overflow-x: auto; scrollbar-width: thin; }
+
+/* Semantic colors */
+.dim { color: var(--dim); }
+.err { color: var(--love); }
+.ok { color: var(--accent); font-weight: 600; }
+.okb { color: var(--fg); }
+.spin { color: var(--love); }
+.distro { color: var(--love); font-weight: 700; }
+.hash { color: var(--gold); }
+.ref { color: var(--rose); }
+.ty { color: var(--iris); }
+.dir { color: var(--accent); font-weight: 650; }
+.exe { color: var(--iris); font-weight: 650; }
+.hid { color: var(--dim); }
+.echo { color: var(--fg); }
+.pb { color: var(--fg); }
+.pu { color: var(--rose); font-weight: 650; }
+.pd { color: var(--accent); font-weight: 650; }
+.pv { color: var(--gold); font-weight: 700; }
+.tilde { color: var(--faint); }
+.heat { color: var(--gold); }
+.colon { color: var(--accent); font-weight: 700; }
+.h1 { color: var(--fg); font-weight: 650; }
+.st-active { color: var(--accent); }
+.st-done { color: var(--iris); }
+.st-planned { color: var(--gold); }
+.st-paused { color: var(--dim); }
+
+a.lnk {
+  color: inherit;
+  text-decoration: none;
+  border-bottom: 1px dotted color-mix(in srgb, var(--fg) 45%, transparent);
+  cursor: pointer;
+  transition: color 120ms ease-out, border-color 120ms ease-out;
+}
+a.lnk:hover { color: var(--fg); border-bottom-color: var(--rose); }
+a.lnk:active { color: var(--rose); }
+
+.cur {
+  display: inline-block;
+  width: 0.6em;
+  height: 1.12em;
+  background: var(--rose);
+  vertical-align: -0.22em;
+  margin-left: 1px;
+  animation: blink 1.06s steps(1) infinite;
+}
+@keyframes blink { 50% { opacity: 0; } }
+
+/* Fetch card */
+.fetch { display: flex; flex-wrap: wrap; gap: 0.6rem 3ch; margin: 0.35rem 0 0.7rem; align-items: flex-start; }
+.art { line-height: 1.22; color: var(--dim); }
+.cup { color: var(--gold); }
+
+/* JL logo: shadow-block letters, two stacked layers so glyphs align exactly */
+.logo { display: flex; flex-direction: column; align-items: center; gap: 0.9em; padding-top: 0.3em; }
+.logo-mark { position: relative; }
+.logo pre { font-family: var(--logo); font-variation-settings: normal; font-size: 1.7em; line-height: 1; }
+.lg-block {
+  background: linear-gradient(100deg, var(--rose) 0%, var(--iris) 40%, var(--fg) 50%, var(--iris) 60%, var(--rose) 100%);
+  background-size: 250% 100%;
+  background-position: 150% 0;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+  position: relative;
+  z-index: 1;
+}
+/* The shadow sits behind the blocks. */
+.lg-shadow { position: absolute; left: 0; top: 0; z-index: 0; color: var(--hl-high); }
+.lg-word { color: var(--dim); letter-spacing: 0.3em; font-size: 0.95em; }
+.lg-cur { color: var(--rose); visibility: hidden; }
+.logo.live .lg-block { animation: shimmer 4.5s ease-in-out infinite; }
+.logo.live .lg-cur { visibility: visible; animation: blink 1.06s steps(1) infinite; }
+@keyframes shimmer { 0% { background-position: 150% 0; } 55%, 100% { background-position: -50% 0; } }
+
+.info { min-width: min(100%, 38ch); flex: 1; }
+.info .k, .k { color: var(--accent); font-weight: 650; }
+.info .sep { color: var(--dim); }
+.sw { display: inline-block; width: 2.6ch; height: 1.05em; vertical-align: -0.18em; }
+.swrow { margin-top: 0.45rem; line-height: 1; }
+
+/* Help */
+.grp { color: var(--fg); font-weight: 600; margin-top: 0.5rem; }
+.help { display: grid; grid-template-columns: max-content 1fr; gap: 0 3ch; padding-left: 2ch; margin-bottom: 0.2rem; }
+.help .hc { color: var(--accent); }
+@media (max-width: 520px) {
+  .help { grid-template-columns: 1fr; padding-left: 1ch; }
+  .help .hd { color: var(--dim); margin-bottom: 0.35rem; }
+}
+
+/* Man page */
+.man { max-width: 80ch; margin: 0.2rem 0 0.6rem; }
+.man .mh { display: flex; justify-content: space-between; gap: 1ch; color: var(--dim); }
+.man .mf { margin-top: 1em; }
+.man h3 { font-size: 1em; margin: 1em 0 0.15em; color: var(--fg); font-weight: 650; letter-spacing: 0.02em; }
+.man p { margin: 0 0 0.35em; padding-left: 7ch; }
+.man dl { margin: 0; padding-left: 7ch; }
+.man dt { color: var(--accent); }
+.man dd { margin: 0 0 0.35em 4ch; }
+@media (max-width: 520px) {
+  .man p, .man dl { padding-left: 2ch; }
+  .man dd { margin-left: 2ch; }
+}
+
+/* Train */
+.trainwrap { position: relative; overflow: hidden; height: 7.2em; }
+.train { position: absolute; left: 0; top: 0; white-space: pre; color: var(--gold); will-change: transform; line-height: 1.2; }
+
+/* Bottom: translucent dock over scrolling content, then a tmux-style status line */
+#bottom { position: fixed; left: 0; right: 0; bottom: 0; z-index: 10; padding-bottom: env(safe-area-inset-bottom, 0px); background: transparent; }
+#dock {
+  display: flex;
+  gap: 0.5rem;
+  overflow-x: auto;
+  scrollbar-width: none;
+  padding: 0.6rem clamp(0.85rem, 3vw, 2rem);
+  background: color-mix(in srgb, var(--bg) 72%, transparent);
+  -webkit-backdrop-filter: blur(16px) saturate(150%);
+  backdrop-filter: blur(16px) saturate(150%);
+  border-top: 1px solid var(--hl-low);
+  mask-image: linear-gradient(90deg, #000 calc(100% - 2.5rem), transparent);
+}
+#dock::-webkit-scrollbar { display: none; }
+.chip {
+  flex: none;
+  font: inherit;
+  font-variation-settings: inherit;
+  font-weight: 500;
+  color: var(--fg);
+  background: color-mix(in srgb, var(--accent) 7%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent) 24%, transparent);
+  border-radius: 7px;
+  padding: 0.4rem 0.78rem;
+  cursor: pointer;
+  transition: transform 100ms ease-out, background-color 120ms ease-out, border-color 120ms ease-out;
+}
+.chip:hover { border-color: color-mix(in srgb, var(--rose) 60%, transparent); }
+.chip:active { transform: scale(0.97); background: color-mix(in srgb, var(--rose) 16%, transparent); }
+#status {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  white-space: nowrap;
+  padding: 0.22rem clamp(0.85rem, 3vw, 2rem);
+  background: var(--bg-2);
+  color: var(--dim);
+  font-size: 0.86em;
+}
+#status .win { color: var(--bg); background: var(--rose); padding: 0 0.7ch; font-weight: 600; margin-right: 1ch; }
+#statusMid { overflow: hidden; text-overflow: ellipsis; }
+@media (max-width: 560px) { #statusMid { display: none; } }
+
+/* htop overlay */
+#overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  background: var(--bg);
+  display: flex;
+  flex-direction: column;
+  padding: calc(env(safe-area-inset-top, 0px) + 0.9rem) clamp(0.85rem, 3vw, 2rem) env(safe-area-inset-bottom, 0px);
+}
+#ovBody { flex: 1; overflow: auto; scrollbar-width: thin; }
+.ovnote { margin: 0 0 0.6rem; }
+.htop-top { display: flex; flex-wrap: wrap; gap: 0.4rem 4ch; margin-bottom: 0.8rem; }
+.htop-top .hl { color: var(--accent); }
+.bar { color: var(--accent); }
+.bar.mem { color: var(--iris); }
+.bar.gpu { color: var(--gold); }
+.thead { background: var(--accent); color: var(--bg); font-weight: 600; display: inline-block; min-width: 100%; }
+.tbl { overflow-x: auto; }
+.tbl pre { min-width: max-content; }
+.pcmd { color: var(--fg); }
+#ovKeys { display: flex; flex-wrap: wrap; gap: 0; padding: 0.5rem 0 0.6rem; white-space: nowrap; }
+.fk { color: var(--fg); padding: 0 0.2ch 0 0.8ch; }
+.fl { background: var(--accent); color: var(--bg); padding: 0 1.2ch 0 0.4ch; font-weight: 600; }
+#ovQuit {
+  font: inherit;
+  font-variation-settings: inherit;
+  border: 0;
+  padding: 0;
+  background: none;
+  cursor: pointer;
+  display: inline-flex;
+  transition: transform 100ms ease-out;
+}
+#ovQuit:active { transform: scale(0.97); }
+
+/* Matrix rain */
+canvas.matrix { position: fixed; inset: 0; width: 100%; height: 100%; z-index: 40; background: var(--bg); cursor: pointer; transition: opacity 300ms ease-out; }
+
+/* Konami aurora: revontulet, in Rosé Pine pine, foam and iris */
+body.aurora::after {
+  content: '';
+  position: fixed;
+  inset: -20%;
+  z-index: 5;
+  pointer-events: none;
+  mix-blend-mode: screen;
+  background:
+    radial-gradient(40% 30% at 30% 25%, color-mix(in srgb, var(--pine) 70%, transparent), transparent 70%),
+    radial-gradient(35% 25% at 60% 20%, color-mix(in srgb, var(--accent) 45%, transparent), transparent 70%),
+    radial-gradient(30% 22% at 78% 30%, color-mix(in srgb, var(--iris) 40%, transparent), transparent 70%);
+  animation: aurora 7s ease-in-out forwards;
+}
+@keyframes aurora {
+  0% { opacity: 0; transform: translateX(-6%) skewY(-4deg); }
+  25% { opacity: 0.75; }
+  75% { opacity: 0.6; transform: translateX(6%) skewY(3deg); }
+  100% { opacity: 0; transform: translateX(8%) skewY(4deg); }
+}
+
+#cmdLine { display: flex; align-items: baseline; white-space: pre; }
+#cmd {
+  flex: 1;
+  min-width: 0;
+  padding: 0;
+  margin: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--fg);
+  font: inherit;
+  font-variation-settings: inherit;
+  caret-color: var(--rose);
+  caret-shape: block;
+}
+@media (pointer: coarse) { #cmd { font-size: 16px; } }
+
+/* No-JavaScript fallback */
+.nojs { max-width: 70ch; margin: 0 auto; padding: 2rem clamp(1rem, 4vw, 2rem); line-height: 1.7; }
+.nojs h1 { font-size: 1.3em; color: var(--fg); }
+.nojs a { color: var(--accent); }
+
+@media (prefers-reduced-motion: reduce) {
+  .cur { animation: none; }
+  .logo.live .lg-block, .logo.live .lg-cur { animation: none; }
+  .chip, .chip:active, #ovQuit:active { transform: none; }
+  body.aurora::after { animation: auroraFade 3s ease-in-out forwards; }
+  @keyframes auroraFade { 0% { opacity: 0; } 30% { opacity: 0.6; } 100% { opacity: 0; } }
+}
+@media (prefers-reduced-transparency: reduce) {
+  #dock { background: var(--bg-2); -webkit-backdrop-filter: none; backdrop-filter: none; }
+}
