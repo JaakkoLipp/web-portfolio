@@ -1,0 +1,56 @@
+---
+import Base from './Base.astro';
+import '../styles/page.css';
+import { site } from '../site.config';
+
+interface Props {
+  title: string;
+  description?: string;
+  /* Shell-style path shown above the title, for example "~/projects". */
+  path: string;
+  noindex?: boolean;
+}
+
+const { title, description, path, noindex } = Astro.props;
+const { user, host } = site.machine;
+const current = Astro.url.pathname.replace(/\/$/, '');
+---
+
+<Base title={title} description={description} noindex={noindex}>
+  <a class="skip-link" href="#main">Skip to content</a>
+  <header class="site-header">
+    <a class="brand" href="/" aria-label={`${site.domain}, back to the terminal`}>
+      <span aria-hidden="true">{site.domain.split('.')[0]}</span><span class="brand-cur" aria-hidden="true">▌</span>
+    </a>
+    <nav aria-label="Pages">
+      <ul>
+        {site.pages.map((p) => (
+          <li>
+            <a href={p.path} aria-current={current === p.path || current.startsWith(p.path + '/') ? 'page' : undefined}>{p.id}</a>
+          </li>
+        ))}
+      </ul>
+    </nav>
+  </header>
+
+  <main id="main" class="page">
+    <p class="crumb" aria-hidden="true">
+      <span class="pu">{user}@{host}</span>:<span class="pd">{path}</span>$ <span class="cmd">cat index.md</span>
+    </p>
+    <slot />
+  </main>
+
+  <footer class="site-footer">
+    <p>
+      {site.links.map((l, i) => (
+        <>
+          {i > 0 && <span aria-hidden="true"> · </span>}
+          <a href={l.url} rel="me noopener">{l.label}</a>
+        </>
+      ))}
+    </p>
+    <p class="dim">
+      <a href="/">Back to the terminal</a>. Static HTML from Astro, served by {site.machine.host}.
+    </p>
+  </footer>
+</Base>
