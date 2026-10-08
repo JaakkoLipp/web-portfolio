@@ -2,9 +2,10 @@
 // Run after `npm run build`. See docs/design-defaults.md, section 7.
 import { readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 const BUDGET = 100 * 1024;
-const dist = new URL('../dist/', import.meta.url).pathname;
+const dist = fileURLToPath(new URL('../dist/', import.meta.url));
 const html = readFileSync(join(dist, 'index.html'), 'utf8');
 
 const assets = new Set();
