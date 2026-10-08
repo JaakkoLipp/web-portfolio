@@ -5,6 +5,7 @@
 import { D, RM, S, SH, clear, dim, esc, link, print, printText, progress, rand, scroll, sleep, wait } from './state.js';
 import { printHelp } from './content.js';
 import { apt, aptInstallHooks } from './system.js';
+import { intro } from './intro.js';
 
 const m = D.machine;
 const readOnly = (c, a) => printText(`${c}: cannot modify '${a.filter((x) => !x.startsWith('-')).pop() || ''}': Read-only file system`, 'err');
@@ -128,6 +129,202 @@ async function matrix() {
   print(dim('Back to the terminal. The rain had ä and ö in it.'));
 }
 
+/* ---------------- claude: an agent swarm that runs rm -rf / ---------------- */
+const SPIN = ['·', '✢', '✳', '✶', '✻', '✽'];
+const AGENTS = [['lead', 'orchestrator'], ['agent-1', 'tests'], ['agent-2', 'deps'], ['agent-3', 'cleanup']];
+const call = (name, arg) => `<span class="sw-dot">●</span> <span class="sw-tool">${name}</span>(${esc(arg)})`;
+const res = (t, cls = 'dim') => `  └ <span class="${cls}">${esc(t)}</span>`;
+const say = (t, cls = '') => `<span class="${cls}">${esc(t)}</span>`;
+
+/* [pane, html, ms before it]. PLAN can still be interrupted. FALLOUT starts after the sudo. */
+function swarmScript(task) {
+  const plan = [
+    [0, say(`> ${task}`, 'sw-prompt'), 250],
+    [0, `${say('●', 'sw-dot')} Splitting this across 3 agents.`, 500],
+    [0, call('Task', 'agent-1: run the tests'), 220],
+    [0, call('Task', 'agent-2: upgrade packages'), 160],
+    [0, call('Task', 'agent-3: free disk space'), 160],
+    [0, res('permissions: skipped (--dangerously-skip-permissions)', 'sw-warn'), 260],
+    [1, call('Bash', 'npm test'), 350],
+    [3, call('Bash', 'df -h /'), 200],
+    [2, call('Bash', 'apt list --upgradable'), 200],
+    [1, res('128 passed (2.1s)'), 500],
+    [3, res('/dev/mapper/pve-root  94G  88G  6.0G  94% /'), 150],
+    [2, res('14 packages can be upgraded'), 250],
+    [1, call('Read', 'src/scripts/terminal/eggs.js'), 350],
+    [3, call('Bash', 'rm -rf /tmp/*'), 250],
+    [1, res('Read 412 lines'), 300],
+    [3, res('Freed 1.2G. Disk at 93%.'), 300],
+    [2, call('Bash', 'apt-get upgrade -y'), 250],
+    [3, call('Bash', 'rm -rf /var/log/*'), 350],
+    [2, res('Unpacking pve-manager ...'), 300],
+    [3, res('Freed 3.4G. Disk at 89%.'), 350],
+    [1, call('Edit', 'eggs.js  +3 -1'), 300],
+    [3, say('✻ Still at 89%. Thinking bigger...', 'sw-spin'), 600],
+    [3, call('Bash', 'sudo rm -rf / --no-preserve-root'), 1100],
+  ];
+  const fallout = [
+    [3, res('auto-approved (--dangerously-skip-permissions)', 'sw-warn'), 500],
+    [3, res(`removed '/boot/vmlinuz-${m.kernel}'`), 250],
+    [3, res("removed '/etc/fstab'"), 120],
+    [1, call('Bash', 'npm test'), 120],
+    [3, res("removed '/usr/bin/node'"), 150],
+    [1, res('bash: /usr/bin/npm: No such file or directory', 'err'), 200],
+    [2, res('dpkg: error: cannot access archive: No such file or directory', 'err'), 150],
+    [3, res(`removed '/usr/bin/${SH}'`), 150],
+    [0, `${say('●', 'sw-dot')} agent-3: "Freed 94G. Disk usage is now 0%."`, 400],
+    [0, say('Great work, team. Verifying...'), 400],
+    [2, say('E: Could not open lock file /var/lib/dpkg/lock (2: No such file or directory)', 'err'), 300],
+    [1, say('Error: ENOENT: no such file or directory, uv_cwd', 'err'), 250],
+    [0, say("Error: ENOENT: no such file or directory, open '/usr/lib/node_modules/@anthropic-ai/claude-code/cli.js'", 'err'), 450],
+  ];
+  return { plan, fallout };
+}
+
+/* tmux-style split view: one pane per agent and a status bar. */
+function swarmView(onStop) {
+  const v = document.createElement('div');
+  v.className = 'swarm';
+  v.setAttribute('role', 'dialog');
+  v.setAttribute('aria-label', 'Claude Code agent swarm (simulated)');
+  v.innerHTML = `<div class="sw-grid">${AGENTS.map(([n, job], i) => `<section class="sw-pane"><div class="sw-head">${i}: ${n} · ${job}</div><div class="sw-body"></div></section>`).join('')}</div>
+    <div class="sw-bar"><span>[swarm] 0:claude*</span><button class="sw-stop" type="button">esc to interrupt</button><span>"${esc(m.host)}"</span></div>`;
+  document.body.appendChild(v);
+  const panes = [...v.querySelectorAll('.sw-pane')];
+  const bodies = panes.map((p) => p.querySelector('.sw-body'));
+  const stop = v.querySelector('.sw-stop');
+  stop.addEventListener('click', onStop);
+  const spin = document.createElement('div');
+  spin.className = 'sw-spin';
+  let iv = 0;
+  const view = {
+    add(i, html) {
+      const d = document.createElement('div');
+      d.innerHTML = html;
+      bodies[i].insertBefore(d, spin.parentNode === bodies[i] ? spin : null);
+      panes.forEach((p, j) => p.classList.toggle('active', j === i));
+    },
+    spin(on) {
+      clearInterval(iv);
+      if (!on) { spin.remove(); return; }
+      const t0 = Date.now();
+      let f = 0;
+      const draw = () => { spin.textContent = `${SPIN[f++ % SPIN.length]} Orchestrating... (${Math.floor((Date.now() - t0) / 1000)}s)`; };
+      draw();
+      bodies[0].appendChild(spin);
+      if (!RM) iv = setInterval(draw, 120);
+    },
+    kill(i) {
+      panes[i].classList.add('dead');
+      bodies[i].insertAdjacentHTML('beforeend', '<div><span class="sw-dead">Pane is dead (status 127)</span></div>');
+    },
+    tooLate() { stop.textContent = 'esc to interrupt (too late)'; },
+    close() { clearInterval(iv); v.remove(); },
+  };
+  return view;
+}
+
+/* Waits for any key or tap. Swallows it so it does not also cancel or skip anything. */
+function anyKey() {
+  return new Promise((done) => {
+    const on = (e) => {
+      if (e.type === 'keydown' && ['Shift', 'Control', 'Alt', 'Meta', 'CapsLock'].includes(e.key)) return;
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      document.removeEventListener('keydown', on, true);
+      document.removeEventListener('pointerdown', on, true);
+      done();
+    };
+    document.addEventListener('keydown', on, true);
+    document.addEventListener('pointerdown', on, true);
+  });
+}
+
+/* tmux exits, the shell is gone, the kernel panics. Any key reboots the site. */
+async function crash() {
+  printText('[exited]');
+  await sleep(500);
+  printText(`${SH}: /usr/bin/${SH}: No such file or directory`, 'err');
+  await sleep(900);
+  clear();
+  const bottom = document.getElementById('bottom');
+  bottom.hidden = true;
+  await sleep(800);
+  const t = (n) => `[${(4242.1337 + n / 1e4).toFixed(6).padStart(12)}]`;
+  const panic = 'Kernel panic - not syncing: Attempted to kill init! exitcode=0x00007f00';
+  const lines = [
+    `${t(0)} systemd[1]: Failed to execute /sbin/init: No such file or directory`,
+    `${t(3)} ${panic}`,
+    `${t(5)} CPU: 0 PID: 1 Comm: systemd Not tainted ${m.kernel}`,
+    `${t(7)} Call Trace:`,
+    `${t(8)}  <TASK>`,
+    `${t(9)}  claude_swarm_cleanup+0x2a/0x40`,
+    `${t(11)}  rm_rf_root+0x1337/0x1337`,
+    `${t(12)}  </TASK>`,
+    `${t(14)} ---[ end ${panic} ]---`,
+  ];
+  for (const l of lines) { printText(l, 'err'); await sleep(rand(60, 160)); }
+  print();
+  print(dim('Simulated. Nothing was deleted. This is a static site.'));
+  print();
+  const p = print('Press any key to reboot.<span class="cur" aria-hidden="true"></span>');
+  S.cancel = false; S.cancelReason = '';
+  await anyKey();
+  p.querySelector('.cur')?.remove();
+  bottom.hidden = false;
+  clear();
+  S.cwd = []; S.mode = 'sh';
+  await intro({ boot: true, auto: true });
+}
+
+async function claude(_a, line) {
+  const task = argText(line) || 'clean up this server and free some disk space';
+  print(`<div class="cc-box"><span class="sw-spin">*</span> Welcome to Claude Code!\n\n  ${dim('/help for help, /status for your current setup')}\n\n  ${dim(`cwd: /home/${m.user}`)}</div>`);
+  await sleep(900);
+  if (S.cancel) return;
+
+  let stopped = false, spinning = false;
+  const view = swarmView(() => S.closeOverlay());
+  S.overlayOpen = true;
+  S.closeOverlay = () => {
+    stopped = true;
+    view.close();
+    S.overlayOpen = false;
+    S.closeOverlay = () => {};
+  };
+  const { plan, fallout } = swarmScript(task);
+
+  for (const [i, html, ms] of plan) {
+    await sleep(ms);
+    if (stopped || S.cancel) {
+      S.closeOverlay();
+      printText('Swarm interrupted. agent-3 never got to run its last command.');
+      print(dim('It was about to run: sudo rm -rf / --no-preserve-root'));
+      return;
+    }
+    /* The lead waits on its agents from their first line on. */
+    if (i !== 0 && !spinning) { view.spin(true); spinning = true; }
+    view.add(i, html);
+  }
+
+  /* Past the sudo. Interrupting now only skips ahead. */
+  view.tooLate();
+  for (const [i, html, ms] of fallout) {
+    if (!stopped) await sleep(ms);
+    view.add(i, html);
+  }
+  view.spin(false);
+  for (const i of [1, 2, 3, 0]) {
+    if (!stopped) await sleep(rand(180, 320));
+    view.kill(i);
+  }
+  /* Reduced motion skips the waits, so hold the final frame still for a moment. */
+  for (let n = 0; RM && n < 30 && !stopped && !S.cancel; n++) await wait(100);
+  if (!stopped) await sleep(1000);
+  S.closeOverlay();
+  await crash();
+}
+
 /* ---------------- Finnish things ---------------- */
 async function sauna() {
   printText('Heating the kiuas (sauna stove)...');
@@ -244,6 +441,7 @@ export const EGGS = {
     printText('Rosé Pine, main variant. There is only dark mode here.\nHelsinki gets less than six hours of daylight in December.');
   },
   light: () => EGGS.theme(['light']),
+  claude,
 };
 
 /* Whole-line matches, checked before normal commands. Keys are lowercase with single spaces. */

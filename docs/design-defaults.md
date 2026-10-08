@@ -94,7 +94,7 @@ To try the moon variant, swap the primitives at the top of `src/styles/tokens.cs
 - Shell features: Tab completion, history, Ctrl+C, Ctrl+L, "Did you mean" suggestions.
 - Underlined output runs a command on click.
 - Status line: tmux style, with path and Helsinki time.
-- Easter eggs: apt, pacman (not here), sudo, rm -rf /, vim, sl, cowsay (moose), matrix, htop, nvidia-smi, docker ps, ping, ssh, curl, sauna, kahvi, sisu, moi, apua, turku, .secrets, Konami code (northern lights).
+- Easter eggs: apt, pacman (not here), sudo, rm -rf /, claude (an agent swarm that wipes / and needs a reboot), vim, sl, cowsay (moose), matrix, htop, nvidia-smi, docker ps, ping, ssh, curl, sauna, kahvi, sisu, moi, apua, turku, .secrets, Konami code (northern lights).
 
 ## 6. Motion and accessibility
 
