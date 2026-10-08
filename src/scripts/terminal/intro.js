@@ -115,7 +115,8 @@ export async function intro({ boot = true, auto = true } = {}) {
   el.cmdLine.hidden = true;
   el.statusMid.textContent = 'press any key to skip';
   const last = store.get(LAST_LOGIN);
-  if (boot) await bootLog();
+  /* Ctrl+L once booted: login starts at the top and the boot log is gone, not just scrolled away. */
+  if (boot) { await bootLog(); clear(); }
   banner();
   await login(last);
   if (auto) {

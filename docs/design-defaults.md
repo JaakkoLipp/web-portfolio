@@ -83,7 +83,7 @@ To try the moon variant, swap the primitives at the top of `src/styles/tokens.cs
 ## 5. Terminal behavior
 
 - Machine: Proxmox VE on `netwatch`. Internal homelab hostnames are never shown.
-- Intro: a brief systemd boot sequence, the Proxmox console banner, auto login as `guest`, then auto-typed `fastfetch`, `git log --oneline -5`, `ls ~`.
+- Intro: a brief systemd boot sequence, a clear screen (like Ctrl+L, no scrollback), the Proxmox console banner, auto login as `guest`, then auto-typed `fastfetch`, `git log --oneline -5`, `ls ~`.
 - `ls ~` is the site menu and always runs last, also after `exit`. Page folders open their page, `<owner>.1` opens the man page, `contact.txt` shows the links.
 - Any key or tap skips the intro. Returning visitors skip the boot (one localStorage key).
 - Prompt format: `guest@netwatch:~$`.
