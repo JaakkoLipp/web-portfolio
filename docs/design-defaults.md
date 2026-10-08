@@ -23,8 +23,8 @@ When the owner confirms a different answer, update this file and add a record in
 | Topic | Default |
 | --- | --- |
 | Git host | GitHub |
-| Hosting | Static files on the VPS `netwatch`, served from `/var/www/portfolio/current` |
-| Deploy | GitHub Actions on push to `main`: build, rsync to a new release folder, atomic symlink switch, keep 5 releases |
+| Hosting | Static files on the VPS `netwatch` in `/var/www/portfolio/current`. Traefik fronts the VPS and must route the domain there. See `docs/deploy.md` |
+| Deploy | GitHub Actions on push to `main` (or by hand): build, rsync to a new release folder, atomic symlink switch, keep 5 releases, then check that `/version.txt` on the live site serves the new commit |
 | PR checks | GitHub Actions runs `npm run build` and `npm run check` on every pull request |
 | Secrets | CI variables only (`VPS_HOST`, `VPS_PORT`, `VPS_USER`, `VPS_SSH_KEY`). Never in the repo |
 | Analytics | None. Optional: self-hosted, cookie-free Umami |
