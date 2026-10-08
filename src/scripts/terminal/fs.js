@@ -15,9 +15,12 @@ function buildFs() {
     } else {
       kids = { [PAGE_FILES[page.id] ?? 'README.md']: { type: 'file', route: page.path, body: `# ${page.title}\n${page.blurb}` } };
     }
-    children[page.id] = { type: 'dir', route: page.path, children: kids };
+    children[page.id] = { type: 'dir', route: page.path, cmd: `open ${page.id}`, children: kids };
   }
-  children['contact.txt'] = { type: 'file', special: 'contact' };
+  /* The man page sits in ~ so the home listing works as the site menu. */
+  const man = D.owner.short.toLowerCase();
+  children[`${man}.1`] = { type: 'file', special: 'man', cmd: `man ${man}`, size: 2048 };
+  children['contact.txt'] = { type: 'file', special: 'contact', cmd: 'contact' };
   children['README.md'] = { type: 'file', body: D.readme.join('\n') };
   children['.secrets'] = {
     type: 'file',
@@ -58,12 +61,15 @@ export const tildePath = (path) => '~/' + path.join('/');
 export const findProject = (id) => D.projects.find((p) => p.id === id);
 export const isOutsideHome = (p) => p.startsWith('/') && p !== HOME && !p.startsWith(HOME + '/');
 
-/* One clickable ls entry. Directories list, programs run, files print. */
+/*
+  One clickable ls entry. Page folders open their page, programs run, files print.
+  A node's `cmd` overrides the default, so `ls ~` doubles as the site menu.
+*/
 export function lsItem(node, name, path) {
   const full = tildePath([...path, name]);
-  if (node.type === 'dir') return link(`<span class="dir">${esc(name)}/</span>`, `ls ${full}`, node.route ?? '#');
+  if (node.type === 'dir') return link(`<span class="dir">${esc(name)}/</span>`, node.cmd ?? `ls ${full}`, node.route ?? '#');
   if (node.type === 'exe') return link(`<span class="exe">${esc(name)}*</span>`, name, node.project.path);
-  return link(`<span class="${name.startsWith('.') ? 'hid' : 'file'}">${esc(name)}</span>`, `cat ${full}`, node.route ?? '#');
+  return link(`<span class="${name.startsWith('.') ? 'hid' : 'file'}">${esc(name)}</span>`, node.cmd ?? `cat ${full}`, node.route ?? '#');
 }
 
 function lsDate(iso) {
@@ -108,6 +114,12 @@ const readMore = (route) => print(`${dim('Read more: ')}${link(esc('open ' + rou
 export function printFile(r, name) {
   const n = r.node;
   if (n.special === 'contact') { print(contactHTML()); return; }
+  if (n.special === 'man') {
+    const man = D.owner.short.toLowerCase();
+    print(dim(`.TH ${man.toUpperCase()} 1\n.SH NAME\n${man} \\- ${D.owner.role}\n.SH SYNOPSIS\n...`));
+    print(`${dim('This is troff source. Read it properly: ')}${link(esc(`man ${man}`), `man ${man}`)}`);
+    return;
+  }
   if (n.type === 'exe') {
     print(dim('^?ELF^B^A^A^@^@^@^@^@^@^@^@^@^C^@>^@^A^@^@^@`^P^@^@^@^@^@^@@^@^@^@'));
     print(`${dim(`cat: ${name}: this is a program, not a text file. Run it: `)}${link(esc(n.project.id), n.project.id, n.project.path)}`);

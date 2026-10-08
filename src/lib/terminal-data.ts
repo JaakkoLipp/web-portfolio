@@ -11,7 +11,7 @@ export async function getTerminalData() {
     domain: site.domain,
     owner: site.owner,
     links: site.links,
-    pages: site.pages.map(({ id, path, title, blurb, dock }) => ({ id, path, title, blurb, dock: !!dock })),
+    pages: site.pages.map(({ id, path, title, blurb }) => ({ id, path, title, blurb })),
     machine: site.machine,
     services: site.services,
     readme: site.readme,

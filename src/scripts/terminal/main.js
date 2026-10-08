@@ -20,7 +20,7 @@ async function execute(raw) {
   if (!S.introRunning) showInput();
 }
 
-/* Types a command into the prompt, then runs it. Used by links and the dock. */
+/* Types a command into the prompt, then runs it. Used by clickable output. */
 async function submitTyped(cmd) {
   if (S.introRunning) { S.queued = cmd; skipIntro(); return; }
   if (S.busy) return;
@@ -115,10 +115,6 @@ el.out.addEventListener('click', (e) => {
   if (!a || e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return;
   e.preventDefault();
   submitTyped(a.dataset.cmd);
-});
-el.dock.addEventListener('click', (e) => {
-  const b = e.target.closest('button[data-cmd]');
-  if (b) submitTyped(b.dataset.cmd);
 });
 el.ovQuit.addEventListener('click', () => S.closeOverlay());
 

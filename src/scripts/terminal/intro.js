@@ -128,10 +128,11 @@ export async function intro({ boot = true, auto = true } = {}) {
     await typeCmd('git log --oneline -5');
     printLog();
     await sleep(450);
-    await typeCmd('ls ~');
-    printLs(FS, [], false);
-    await sleep(200);
   }
+  /* Always last: the home listing is the site menu. */
+  await typeCmd('ls ~');
+  printLs(FS, [], false);
+  await sleep(200);
   print();
   print(hintHTML());
   store.set(LAST_LOGIN, new Date().toISOString());

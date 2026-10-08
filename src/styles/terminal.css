@@ -17,7 +17,7 @@ body.tty {
   overflow-y: auto;
   overflow-x: hidden;
   overscroll-behavior: contain;
-  padding: 1.1rem clamp(0.85rem, 3vw, 2rem) calc(6.2rem + env(safe-area-inset-bottom, 0px));
+  padding: 1.1rem clamp(0.85rem, 3vw, 2rem) calc(3rem + env(safe-area-inset-bottom, 0px));
   scrollbar-width: thin;
   scrollbar-color: var(--hl-med) transparent;
 }
@@ -137,36 +137,8 @@ a.lnk:active { color: var(--rose); }
 .trainwrap { position: relative; overflow: hidden; height: 7.2em; }
 .train { position: absolute; left: 0; top: 0; white-space: pre; color: var(--gold); will-change: transform; line-height: 1.2; }
 
-/* Bottom: translucent dock over scrolling content, then a tmux-style status line */
-#bottom { position: fixed; left: 0; right: 0; bottom: 0; z-index: 10; padding-bottom: env(safe-area-inset-bottom, 0px); background: transparent; }
-#dock {
-  display: flex;
-  gap: 0.5rem;
-  overflow-x: auto;
-  scrollbar-width: none;
-  padding: 0.6rem clamp(0.85rem, 3vw, 2rem);
-  background: color-mix(in srgb, var(--bg) 72%, transparent);
-  -webkit-backdrop-filter: blur(16px) saturate(150%);
-  backdrop-filter: blur(16px) saturate(150%);
-  border-top: 1px solid var(--hl-low);
-  mask-image: linear-gradient(90deg, #000 calc(100% - 2.5rem), transparent);
-}
-#dock::-webkit-scrollbar { display: none; }
-.chip {
-  flex: none;
-  font: inherit;
-  font-variation-settings: inherit;
-  font-weight: 500;
-  color: var(--fg);
-  background: color-mix(in srgb, var(--accent) 7%, transparent);
-  border: 1px solid color-mix(in srgb, var(--accent) 24%, transparent);
-  border-radius: 7px;
-  padding: 0.4rem 0.78rem;
-  cursor: pointer;
-  transition: transform 100ms ease-out, background-color 120ms ease-out, border-color 120ms ease-out;
-}
-.chip:hover { border-color: color-mix(in srgb, var(--rose) 60%, transparent); }
-.chip:active { transform: scale(0.97); background: color-mix(in srgb, var(--rose) 16%, transparent); }
+/* Bottom: a tmux-style status line */
+#bottom { position: fixed; left: 0; right: 0; bottom: 0; z-index: 10; padding-bottom: env(safe-area-inset-bottom, 0px); background: var(--bg-2); }
 #status {
   display: flex;
   justify-content: space-between;
@@ -266,10 +238,7 @@ body.aurora::after {
 @media (prefers-reduced-motion: reduce) {
   .cur { animation: none; }
   .logo.live .lg-block, .logo.live .lg-cur { animation: none; }
-  .chip, .chip:active, #ovQuit:active { transform: none; }
+  #ovQuit:active { transform: none; }
   body.aurora::after { animation: auroraFade 3s ease-in-out forwards; }
   @keyframes auroraFade { 0% { opacity: 0; } 30% { opacity: 0.6; } 100% { opacity: 0; } }
-}
-@media (prefers-reduced-transparency: reduce) {
-  #dock { background: var(--bg-2); -webkit-backdrop-filter: none; backdrop-filter: none; }
 }

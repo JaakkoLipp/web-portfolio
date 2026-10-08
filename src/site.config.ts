@@ -10,8 +10,6 @@ export interface Page {
   path: string;
   title: string;
   blurb: string;
-  /* Adds a quick button under the terminal. */
-  dock?: boolean;
   /* Optional launch date (YYYY-MM-DD). Pages with a date show up in `git log`. */
   date?: string;
 }
@@ -74,12 +72,12 @@ export const site: SiteConfig = {
     { id: 'linkedin', label: 'LinkedIn', url: 'https://www.linkedin.com/in/jaakko-lipponen/' },
   ],
 
-  /* Pages outside the terminal. `dock: true` adds a quick button under the terminal. */
+  /* Pages outside the terminal. Each one is also a folder in `ls ~`, which works as the site menu. */
   pages: [
-    { id: 'projects', path: '/projects', title: 'Projects', blurb: 'Things I build and run. Each one is also an executable in the terminal.', dock: true },
-    { id: 'paper', path: '/paper', title: 'Daily AI newspaper', blurb: 'A daily HTML newspaper, written by a local LLM pipeline.', dock: true },
-    { id: 'keymap', path: '/keymap', title: 'Sofle keymap', blurb: 'Quick reference for the layers on my Sofle split keyboard.', dock: true },
-    { id: 'writing', path: '/writing', title: 'Writing', blurb: 'Notes on LLM platforms, infrastructure and the tools around them.', dock: true },
+    { id: 'projects', path: '/projects', title: 'Projects', blurb: 'Things I build and run. Each one is also an executable in the terminal.' },
+    { id: 'paper', path: '/paper', title: 'Daily AI newspaper', blurb: 'A daily HTML newspaper, written by a local LLM pipeline.' },
+    { id: 'keymap', path: '/keymap', title: 'Sofle keymap', blurb: 'Quick reference for the layers on my Sofle split keyboard.' },
+    { id: 'writing', path: '/writing', title: 'Writing', blurb: 'Notes on LLM platforms, infrastructure and the tools around them.' },
   ],
 
   /* The machine the terminal pretends to be. `host` is the public VPS that serves this site. */
@@ -119,7 +117,7 @@ export const site: SiteConfig = {
   readme: [
     'Welcome to jaalip.com.',
     'This is a terminal, but you do not need to know Linux.',
-    'Click anything underlined, or use the buttons at the bottom.',
+    'Click anything underlined. The folders in ~ open the pages.',
     'Every project in ~/projects is a program. Type its name to run it.',
     'Type help to see all commands.',
   ],

@@ -17,7 +17,6 @@ export const el = {
   prompt: $('#prompt'),
   statusMid: $('#statusMid'),
   clock: $('#clock'),
-  dock: $('#dock'),
   ov: $('#overlay'),
   ovBody: $('#ovBody'),
   ovQuit: $('#ovQuit'),

@@ -120,7 +120,7 @@ export function manHTML() {
 }
 
 export function hintHTML() {
-  return `${dim('Pick a page below, click anything underlined, or type ')}${link('help', 'help')}${dim('.')}`;
+  return `${dim('Click a name above to open it, or type ')}${link('help', 'help')}${dim('.')}`;
 }
 
 /* ---------------- Projects are programs ---------------- */

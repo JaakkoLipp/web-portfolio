@@ -70,7 +70,7 @@ export const C = {
       const r = resolve(t);
       if (!r) { printText(`${t}: cannot open '${t}' (No such file or directory)`); continue; }
       const n = r.node;
-      printText(`${t}: ${n.type === 'dir' ? 'directory' : n.type === 'exe' ? 'ELF 64-bit LSB pie executable, x86-64, dynamically linked. Or a Markdown file in disguise.' : t.endsWith('.html') ? 'HTML document, UTF-8 Unicode text' : 'ASCII text'}`);
+      printText(`${t}: ${n.type === 'dir' ? 'directory' : n.type === 'exe' ? 'ELF 64-bit LSB pie executable, x86-64, dynamically linked. Or a Markdown file in disguise.' : t.endsWith('.html') ? 'HTML document, UTF-8 Unicode text' : t.endsWith('.1') ? 'troff or preprocessor input, ASCII text' : 'ASCII text'}`);
     }
   },
   open: (a) => openPage(a[0]), 'xdg-open': (a) => openPage(a[0]),
@@ -289,7 +289,7 @@ export async function dispatch(line) {
   const own = (k) => Object.prototype.hasOwnProperty.call(C, k);
   const fn = own(cmd) ? C[cmd] : own(cmd.toLowerCase()) ? C[cmd.toLowerCase()] : null;
   if (fn) return fn(args, line);
-  /* Page names work as shortcuts, like the dock buttons. */
+  /* Page names work as shortcuts, like the folders in `ls ~`. */
   const page = D.pages.find((p) => p.id === cmd.toLowerCase() || (cmd.toLowerCase() === 'blog' && p.id === 'writing'));
   if (page) return openPage(page.id);
   const project = findProject(cmd) || findProject(cmd.toLowerCase());

@@ -52,7 +52,7 @@ Contact is GitHub and LinkedIn only. No email address on the site.
 | --- | --- | --- | --- |
 | `--bg` | base | `#191724` | Page background |
 | `--bg-2` | surface | `#1f1d2e` | Status line, raised surfaces |
-| `--bg-3` | overlay | `#26233a` | Code blocks, chips |
+| `--bg-3` | overlay | `#26233a` | Inline code |
 | `--fg` | text | `#e0def4` | Body text, typed commands |
 | `--dim` | subtle | `#908caa` | Secondary text |
 | `--faint` | muted | `#6e6a86` | Decoration only |
@@ -83,6 +83,7 @@ To try the moon variant, swap the primitives at the top of `src/styles/tokens.cs
 
 - Machine: Proxmox VE on `netwatch`. Internal homelab hostnames are never shown.
 - Intro: a brief systemd boot sequence, the Proxmox console banner, auto login as `guest`, then auto-typed `fastfetch`, `git log --oneline -5`, `ls ~`.
+- `ls ~` is the site menu and always runs last, also after `exit`. Page folders open their page, `<owner>.1` opens the man page, `contact.txt` shows the links.
 - Any key or tap skips the intro. Returning visitors skip the boot (one localStorage key).
 - Prompt format: `guest@netwatch:~$`.
 - Projects are executables in `~/projects`, which is on `PATH`. `homelab`, `./homelab` and `~/projects/homelab` all run it.
@@ -90,7 +91,6 @@ To try the moon variant, swap the primitives at the top of `src/styles/tokens.cs
 - Services (boot log, `htop`, `docker ps`) come from `services` in `src/site.config.ts`.
 - Shell features: Tab completion, history, Ctrl+C, Ctrl+L, "Did you mean" suggestions.
 - Underlined output runs a command on click.
-- Bottom dock: translucent quick buttons (projects, paper, keymap, writing, manual, contact, help).
 - Status line: tmux style, with path and Helsinki time.
 - Easter eggs: apt, pacman (not here), sudo, rm -rf /, vim, sl, cowsay (moose), matrix, htop, nvidia-smi, docker ps, ping, ssh, curl, sauna, kahvi, sisu, moi, apua, turku, .secrets, Konami code (northern lights).
 
@@ -99,7 +99,7 @@ To try the moon variant, swap the primitives at the top of `src/styles/tokens.cs
 - Press feedback on pointer-down (scale 0.97, 100 ms).
 - Every animation is interruptible.
 - Reduced motion: no typing animation, no train, no rain, static logo.
-- Reduced transparency: solid dock.
+- Reduced transparency: nothing on the homepage is translucent.
 - Hidden nav with real links for screen readers, plus a `<noscript>` fallback.
 - Text colors pass WCAG AA on their background.
 

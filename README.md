@@ -26,7 +26,7 @@ npm run preview    # serve dist/
 | --- | --- |
 | Name, role, links, man page, fortunes | `src/site.config.ts` |
 | The machine (host, OS, kernel, GPU) and the services in the boot log, `htop` and `docker ps` | `src/site.config.ts` |
-| Pages and the dock buttons | `pages` in `src/site.config.ts` |
+| Pages (also the folders in `ls ~`, the terminal's menu) | `pages` in `src/site.config.ts` |
 | Projects | `src/content/projects/<id>.md` |
 | Posts | `src/content/writing/<id>.md` |
 | Colors | `src/styles/tokens.css` |

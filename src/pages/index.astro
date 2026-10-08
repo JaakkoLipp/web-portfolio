@@ -6,13 +6,6 @@ import { getTerminalData, toScriptJson } from '../lib/terminal-data';
 
 const data = await getTerminalData();
 const { owner, links, pages } = site;
-const manName = owner.short.toLowerCase();
-const dock = [
-  ...pages.filter((p) => p.dock).map((p) => ({ label: p.id, cmd: `open ${p.id}` })),
-  { label: 'manual', cmd: `man ${manName}` },
-  { label: 'contact', cmd: 'contact' },
-  { label: 'help', cmd: 'help' },
-];
 ---
 
 <Base title={`${owner.name}, ${owner.role}`} bodyClass="tty">
@@ -61,9 +54,6 @@ const dock = [
     </main>
 
     <div id="bottom">
-      <nav id="dock" aria-label="Quick commands">
-        {dock.map((b) => <button class="chip" type="button" data-cmd={b.cmd}>{b.label}</button>)}
-      </nav>
       <div id="status">
         <span><span class="win">0:jsh*</span>[{site.domain.split('.')[0]}]</span>
         <span id="statusMid"></span>
