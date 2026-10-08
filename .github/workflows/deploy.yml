@@ -45,39 +45,42 @@ jobs:
       - name: Stamp the release
         run: echo "${GITHUB_SHA}" > dist/version.txt
 
-      - name: Start SSH agent
-        uses: webfactory/ssh-agent@v0.10.0
-        with:
-          ssh-private-key: ${{ secrets.VPS_SSH_KEY }}
-
-      - name: Trust host key
-        run: |
-          mkdir -p ~/.ssh
-          ssh-keyscan -p ${{ secrets.VPS_PORT }} -H ${{ secrets.VPS_HOST }} >> ~/.ssh/known_hosts
-
-      - name: Upload dist to new release
+      # The deploy key is locked to one job on the server: it can upload a
+      # release and activate it, nothing else. The host key is pinned.
+      - name: Configure SSH
         env:
           VPS_HOST: ${{ secrets.VPS_HOST }}
           VPS_PORT: ${{ secrets.VPS_PORT }}
           VPS_USER: ${{ secrets.VPS_USER }}
+          VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
+          VPS_KNOWN_HOSTS: ${{ secrets.VPS_KNOWN_HOSTS }}
         run: |
-          RELEASE_ID="$(date +%Y%m%d%H%M%S)-${GITHUB_SHA::7}"
-          echo "RELEASE_ID=$RELEASE_ID" >> $GITHUB_ENV
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "${VPS_SSH_KEY}" > ~/.ssh/deploy_key
+          printf '%s\n' "${VPS_KNOWN_HOSTS}" > ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/deploy_key ~/.ssh/known_hosts
+          cat > ~/.ssh/config <<EOF
+          Host vps
+            HostName ${VPS_HOST}
+            Port ${VPS_PORT}
+            User ${VPS_USER}
+            IdentityFile ~/.ssh/deploy_key
+            IdentitiesOnly yes
+            StrictHostKeyChecking yes
+            BatchMode yes
+            ControlMaster auto
+            ControlPath ~/.ssh/cm-%C
+            ControlPersist 2m
+          EOF
 
-          rsync -az --delete -e "ssh -p ${VPS_PORT}" \
-            ./dist/ "${VPS_USER}@${VPS_HOST}:/var/www/portfolio/releases/${RELEASE_ID}/"
-
-      - name: Atomic switch + cleanup
-        env:
-          VPS_HOST: ${{ secrets.VPS_HOST }}
-          VPS_PORT: ${{ secrets.VPS_PORT }}
-          VPS_USER: ${{ secrets.VPS_USER }}
-          RELEASE_ID: ${{ env.RELEASE_ID }}
+      - name: Upload a new release
         run: |
-          ssh -p ${VPS_PORT} ${VPS_USER}@${VPS_HOST} bash -lc "set -euo pipefail
-            ln -sfn /var/www/portfolio/releases/${RELEASE_ID} /var/www/portfolio/current
-            ls -1dt /var/www/portfolio/releases/* | tail -n +6 | xargs -r rm -rf
-          "
+          RELEASE_ID="$(date -u +%Y%m%d%H%M%S)-${GITHUB_SHA::7}"
+          echo "RELEASE_ID=${RELEASE_ID}" >> "${GITHUB_ENV}"
+          rsync -rlptz --chmod=D755,F644 ./dist/ "vps:${RELEASE_ID}/"
+
+      - name: Switch the site to the new release
+        run: ssh vps activate "${RELEASE_ID}"
 
       - name: Verify the live site serves this release
         run: |
@@ -89,5 +92,5 @@ jobs:
           done
           # Print the reason (for example a TLS error) before failing.
           curl -sS -o /dev/null --max-time 10 "${SITE_URL}/version.txt" || true
-          echo "::error::${SITE_URL} does not serve this release. The files were uploaded, but the web server does not route the domain to /var/www/portfolio/current. See docs/deploy.md."
+          echo "::error::${SITE_URL} does not serve this release. The upload and switch worked, so check the web server and routing on the VPS. See docs/deploy.md."
           exit 1

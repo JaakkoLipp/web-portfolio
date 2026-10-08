@@ -23,10 +23,11 @@ When the owner confirms a different answer, update this file and add a record in
 | Topic | Default |
 | --- | --- |
 | Git host | GitHub |
-| Hosting | Static files on the VPS `netwatch` in `/var/www/portfolio/current`. Traefik fronts the VPS and must route the domain there. See `docs/deploy.md` |
-| Deploy | GitHub Actions on push to `main` (or by hand): build, rsync to a new release folder, atomic symlink switch, keep 5 releases, then check that `/version.txt` on the live site serves the new commit |
+| Hosting | Static files on the VPS `netwatch`. The server setup is documented on the server, never in this public repo |
+| Deploy | GitHub Actions on push to `main` (or by hand): build, upload a new release over SSH, atomic switch, keep 5 releases, then check that `/version.txt` on the live site serves the new commit. See `docs/deploy.md` |
+| Deploy access | A dedicated deploy user and key. The key can only upload and activate a release. The host key is pinned |
 | PR checks | GitHub Actions runs `npm run build` and `npm run check` on every pull request |
-| Secrets | CI variables only (`VPS_HOST`, `VPS_PORT`, `VPS_USER`, `VPS_SSH_KEY`). Never in the repo |
+| Secrets | CI secrets only (`VPS_HOST`, `VPS_PORT`, `VPS_USER`, `VPS_SSH_KEY`, `VPS_KNOWN_HOSTS`). Never in the repo |
 | Analytics | None. Optional: self-hosted, cookie-free Umami |
 
 ## 3. Pages and routes
