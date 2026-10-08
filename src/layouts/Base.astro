@@ -1,0 +1,43 @@
+---
+import '@fontsource-variable/martian-mono/wdth.css';
+import '../styles/tokens.css';
+import fontUrl from '@fontsource-variable/martian-mono/files/martian-mono-latin-wdth-normal.woff2?url';
+import { site } from '../site.config';
+
+interface Props {
+  title?: string;
+  description?: string;
+  /* Extra class on <body>, for example "tty" on the terminal page. */
+  bodyClass?: string;
+  noindex?: boolean;
+}
+
+const { title, description = site.description, bodyClass, noindex = false } = Astro.props;
+const fullTitle = title ? `${title} | ${site.domain}` : site.domain;
+const canonical = new URL(Astro.url.pathname, site.url).href;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>{fullTitle}</title>
+    <meta name="description" content={description} />
+    <meta name="color-scheme" content="dark" />
+    <meta name="theme-color" content="#191724" />
+    {!noindex && <link rel="canonical" href={canonical} />}
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="preload" href={fontUrl} as="font" type="font/woff2" crossorigin />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content={site.domain} />
+    <meta property="og:title" content={fullTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    {noindex && <meta name="robots" content="noindex" />}
+    <slot name="head" />
+  </head>
+  <body class={bodyClass}>
+    <slot />
+  </body>
+</html>

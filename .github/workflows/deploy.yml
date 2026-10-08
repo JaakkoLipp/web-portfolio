@@ -1,8 +1,17 @@
-name: Deploy Astro to VPS
+name: Deploy to netwatch
 
 on:
   push:
     branches: [ "main" ]
+  # Run it by hand from the Actions tab to test the pipeline without a new commit.
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  # Public URL that must serve the new release. Override with a repository variable.
+  SITE_URL: ${{ vars.SITE_URL || 'https://jaalip.com' }}
 
 concurrency:
   group: portfolio-deploy
@@ -10,17 +19,19 @@ concurrency:
 
 jobs:
   deploy:
+    # A manual run from another branch must never reach production.
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
-          node-version: "20"
-          cache: "npm"
+          node-version-file: .nvmrc
+          cache: npm
 
       - name: Install deps
         run: npm ci
@@ -28,8 +39,14 @@ jobs:
       - name: Build
         run: npm run build
 
+      - name: Type check and size budget
+        run: npm run check
+
+      - name: Stamp the release
+        run: echo "${GITHUB_SHA}" > dist/version.txt
+
       - name: Start SSH agent
-        uses: webfactory/ssh-agent@v0.9.0
+        uses: webfactory/ssh-agent@v0.10.0
         with:
           ssh-private-key: ${{ secrets.VPS_SSH_KEY }}
 
@@ -61,3 +78,16 @@ jobs:
             ln -sfn /var/www/portfolio/releases/${RELEASE_ID} /var/www/portfolio/current
             ls -1dt /var/www/portfolio/releases/* | tail -n +6 | xargs -r rm -rf
           "
+
+      - name: Verify the live site serves this release
+        run: |
+          for i in 1 2 3 4 5 6; do
+            live="$(curl -fsS --max-time 10 "${SITE_URL}/version.txt?t=$(date +%s)" || true)"
+            if [ "${live}" = "${GITHUB_SHA}" ]; then echo "Live: ${live}"; exit 0; fi
+            echo "Attempt ${i}: live version is '${live:-unreachable}', want ${GITHUB_SHA}"
+            sleep 10
+          done
+          # Print the reason (for example a TLS error) before failing.
+          curl -sS -o /dev/null --max-time 10 "${SITE_URL}/version.txt" || true
+          echo "::error::${SITE_URL} does not serve this release. The files were uploaded, but the web server does not route the domain to /var/www/portfolio/current. See docs/deploy.md."
+          exit 1

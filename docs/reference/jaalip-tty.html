@@ -1,0 +1,1349 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>jaalip.com (tty1)</title>
+<meta name="color-scheme" content="dark">
+<meta name="description" content="Jaakko, AI specialist and consultant in Helsinki. Self-hosted, GDPR-compliant LLM platforms.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Martian+Mono:wdth,wght@75..112.5,100..800&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+<style>
+/* Palette: polar night. Cold slate base, frost text, ice accent, pine for success. */
+:root{
+  --bg:#0F1A24; --bg-2:#152431; --fg:#CFD9E2; --dim:#6E8293; --snow:#F2F5F7;
+  --ice:#7CC4F0; --pine:#7DBA94; --amber:#E5B567; --red:#E27878; --violet:#B39DDB; --teal:#6FC7C2;
+  --mono:"Martian Mono", ui-monospace, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+  color-scheme:dark;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+/* The site is dark only. Tokens repeat so viewer theme switches never flip it. */
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){ --bg:#0F1A24; --fg:#CFD9E2; } }
+:root[data-theme="dark"]{ --bg:#0F1A24; --fg:#CFD9E2; }
+@media (prefers-contrast: more){ :root{ --dim:#9DB0C0; --fg:#E6EDF3; } }
+
+*,*::before,*::after{box-sizing:inherit}
+[hidden]{display:none!important}
+html{height:100%;background:var(--bg);scroll-padding-top:env(safe-area-inset-top,0px)}
+body{
+  height:100%;margin:0;overflow:hidden;
+  background:var(--bg);color:var(--fg);
+  font-family:var(--mono);font-variation-settings:"wdth" 87.5;font-weight:400;
+  font-size:clamp(.76rem,.68rem + .36vw,.93rem);line-height:1.55;
+  -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;
+}
+::selection{background:rgba(124,196,240,.32);color:var(--snow)}
+:focus-visible{outline:2px solid var(--ice);outline-offset:2px;border-radius:3px}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+#app{height:100%}
+#term{
+  height:100%;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;
+  padding:1.1rem clamp(.85rem,3vw,2rem) calc(6.2rem + env(safe-area-inset-bottom,0px));
+  scrollbar-width:thin;scrollbar-color:#2A3D4D transparent;
+}
+#screen{max-width:96ch}
+
+.ln{white-space:pre-wrap;overflow-wrap:anywhere;min-height:1.55em}
+.ln.block{white-space:normal}
+pre{margin:0;font:inherit;font-variation-settings:inherit}
+.scroll-x{overflow-x:auto;scrollbar-width:thin}
+
+/* Semantic colors */
+.dim{color:var(--dim)} .err{color:var(--red)} .ok{color:var(--pine);font-weight:600} .okb{color:var(--fg)}
+.hash{color:var(--amber)} .ref{color:var(--teal)} .ty{color:var(--violet)}
+.dir{color:var(--ice);font-weight:650} .hid{color:var(--dim)} .echo{color:var(--snow)}
+.pb{color:var(--dim)} .pu{color:var(--pine);font-weight:600} .ph{color:var(--ice);font-weight:600} .pd{color:var(--fg)} .pv{color:var(--amber);font-weight:700}
+.tilde{color:#3B5A75} .heat{color:var(--amber)} .colon{color:var(--ice);font-weight:700}
+.h1{color:var(--snow);font-weight:650}
+
+a.lnk{color:inherit;text-decoration:none;border-bottom:1px dotted rgba(207,217,226,.45);cursor:pointer;transition:color 120ms ease-out,border-color 120ms ease-out}
+a.lnk:hover{color:var(--snow);border-bottom-color:var(--ice)}
+a.lnk:active{color:var(--ice)}
+
+.cur{display:inline-block;width:.6em;height:1.12em;background:var(--ice);vertical-align:-.22em;margin-left:1px;animation:blink 1.06s steps(1) infinite}
+@keyframes blink{50%{opacity:0}}
+
+/* Fetch card */
+.fetch{display:flex;flex-wrap:wrap;gap:.6rem 3ch;margin:.35rem 0 .7rem;align-items:flex-start}
+.art{line-height:1.22;color:var(--dim)}
+/* JL logo: shadow-block letters, two stacked layers so glyphs align exactly */
+.logo{display:flex;flex-direction:column;align-items:center;gap:.9em;padding-top:.3em}
+.logo-mark{position:relative}
+.logo pre{font-family:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;font-variation-settings:normal;font-size:1.7em;line-height:1}
+.lg-block{
+  background:linear-gradient(100deg,var(--ice) 0%,var(--violet) 40%,var(--snow) 50%,var(--violet) 60%,var(--ice) 100%);
+  background-size:250% 100%;background-position:150% 0;
+  -webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-fill-color:transparent;
+}
+.lg-shadow{position:absolute;left:0;top:0;color:#3A5568}
+.lg-word{color:#8FA2B2;letter-spacing:.3em;font-size:.95em}
+.lg-cur{color:var(--ice);visibility:hidden}
+.logo.live .lg-block{animation:shimmer 4.5s ease-in-out infinite}
+.logo.live .lg-cur{visibility:visible;animation:blink 1.06s steps(1) infinite}
+@keyframes shimmer{0%{background-position:150% 0}55%,100%{background-position:-50% 0}}
+.info{min-width:min(100%,38ch);flex:1}
+.info .k{color:var(--ice);font-weight:650}
+.info .sep{color:var(--dim)}
+.sw{display:inline-block;width:2.6ch;height:1.05em;vertical-align:-.18em}
+.swrow{margin-top:.45rem;line-height:1}
+
+/* Help */
+.grp{color:var(--snow);font-weight:600;margin-top:.5rem}
+.help{display:grid;grid-template-columns:max-content 1fr;gap:0 3ch;padding-left:2ch;margin-bottom:.2rem}
+.help .hc{color:var(--ice)}
+@media (max-width:520px){ .help{grid-template-columns:1fr;padding-left:1ch} .help .hd{color:var(--dim);margin-bottom:.35rem} }
+
+/* Man page */
+.man{max-width:80ch;margin:.2rem 0 .6rem}
+.man .mh{display:flex;justify-content:space-between;gap:1ch;color:var(--dim)}
+.man h3{font-size:1em;margin:1em 0 .15em;color:var(--snow);font-weight:650;letter-spacing:.02em}
+.man p{margin:0 0 .35em;padding-left:7ch}
+.man dl{margin:0;padding-left:7ch}
+.man dt{color:var(--ice)} .man dd{margin:0 0 .35em 4ch}
+@media (max-width:520px){ .man p,.man dl{padding-left:2ch} .man dd{margin-left:2ch} }
+
+/* Train */
+.trainwrap{position:relative;overflow:hidden;height:7.2em}
+.train{position:absolute;left:0;top:0;white-space:pre;color:var(--amber);will-change:transform;line-height:1.2}
+
+/* Bottom: translucent dock over scrolling content, then a tmux-style status line */
+#bottom{position:fixed;left:0;right:0;bottom:0;z-index:10;padding-bottom:env(safe-area-inset-bottom,0px);background:var(--bg-2)}
+#dock{
+  display:flex;gap:.5rem;overflow-x:auto;scrollbar-width:none;
+  padding:.6rem clamp(.85rem,3vw,2rem);
+  background:rgba(15,26,36,.72);
+  -webkit-backdrop-filter:blur(16px) saturate(150%);backdrop-filter:blur(16px) saturate(150%);
+  border-top:1px solid rgba(255,255,255,.06);
+  mask-image:linear-gradient(90deg,#000 calc(100% - 2.5rem),transparent);
+}
+#bottom{background:transparent}
+#dock::-webkit-scrollbar{display:none}
+.chip{
+  flex:none;font:inherit;font-variation-settings:inherit;font-weight:500;color:var(--fg);
+  background:rgba(124,196,240,.07);border:1px solid rgba(124,196,240,.22);border-radius:7px;
+  padding:.4rem .78rem;cursor:pointer;
+  transition:transform 100ms ease-out,background-color 120ms ease-out,border-color 120ms ease-out;
+}
+.chip:hover{border-color:rgba(124,196,240,.5);color:var(--snow)}
+.chip:active{transform:scale(.97);background:rgba(124,196,240,.17)}
+#status{
+  display:flex;justify-content:space-between;gap:1rem;white-space:nowrap;
+  padding:.22rem clamp(.85rem,3vw,2rem);background:var(--bg-2);color:var(--dim);font-size:.86em;
+}
+#status .win{color:var(--bg);background:var(--ice);padding:0 .7ch;font-weight:600;margin-right:1ch}
+#statusMid{overflow:hidden;text-overflow:ellipsis}
+@media (max-width:560px){ #statusMid{display:none} }
+
+/* htop overlay */
+#overlay{
+  position:fixed;inset:0;z-index:30;background:var(--bg);display:flex;flex-direction:column;
+  padding:calc(env(safe-area-inset-top,0px) + .9rem) clamp(.85rem,3vw,2rem) env(safe-area-inset-bottom,0px);
+}
+#ovBody{flex:1;overflow:auto;scrollbar-width:thin}
+.ovnote{margin:0 0 .6rem}
+.htop-top{display:flex;flex-wrap:wrap;gap:.4rem 4ch;margin-bottom:.8rem}
+.htop-top .hl{color:var(--ice)}
+.bar{color:var(--pine)} .bar.mem{color:var(--ice)} .bar.gpu{color:var(--violet)}
+.thead{background:var(--pine);color:var(--bg);font-weight:600;display:inline-block;min-width:100%}
+.tbl{overflow-x:auto}
+.tbl pre{min-width:max-content}
+.pcmd{color:var(--snow)}
+#ovKeys{display:flex;flex-wrap:wrap;gap:0;padding:.5rem 0 .6rem;white-space:nowrap}
+.fk{color:var(--fg);padding:0 .2ch 0 .8ch}
+.fl{background:var(--ice);color:var(--bg);padding:0 1.2ch 0 .4ch;font-weight:600}
+#ovQuit{font:inherit;font-variation-settings:inherit;border:0;padding:0;background:none;cursor:pointer;display:inline-flex;transition:transform 100ms ease-out}
+#ovQuit:active{transform:scale(.97)}
+
+/* Matrix rain */
+canvas.matrix{position:fixed;inset:0;width:100%;height:100%;z-index:40;background:var(--bg);cursor:pointer;transition:opacity 300ms ease-out}
+
+/* Konami aurora: revontulet */
+body.aurora::after{
+  content:"";position:fixed;inset:-20%;z-index:5;pointer-events:none;mix-blend-mode:screen;
+  background:
+    radial-gradient(40% 30% at 30% 25%,rgba(125,186,148,.55),transparent 70%),
+    radial-gradient(35% 25% at 60% 20%,rgba(111,199,194,.45),transparent 70%),
+    radial-gradient(30% 22% at 78% 30%,rgba(179,157,219,.40),transparent 70%);
+  animation:aurora 7s ease-in-out forwards;
+}
+@keyframes aurora{
+  0%{opacity:0;transform:translateX(-6%) skewY(-4deg)}
+  25%{opacity:.75}
+  75%{opacity:.6;transform:translateX(6%) skewY(3deg)}
+  100%{opacity:0;transform:translateX(8%) skewY(4deg)}
+}
+
+#cmdLine{display:flex;align-items:baseline;white-space:pre}
+#cmd{
+  flex:1;min-width:0;padding:0;margin:0;border:0;outline:0;background:transparent;
+  color:var(--snow);font:inherit;font-variation-settings:inherit;
+  caret-color:var(--ice);caret-shape:block;
+}
+@media (pointer:coarse){ #cmd{font-size:16px} }
+
+@media (prefers-reduced-motion: reduce){
+  .cur{animation:none}
+  .logo.live .lg-block,.logo.live .lg-cur{animation:none}
+  .chip,.chip:active,#ovQuit:active{transform:none}
+  body.aurora::after{animation:auroraFade 3s ease-in-out forwards}
+  @keyframes auroraFade{0%{opacity:0}30%{opacity:.6}100%{opacity:0}}
+}
+@media (prefers-reduced-transparency: reduce){
+  #dock{background:var(--bg-2);-webkit-backdrop-filter:none;backdrop-filter:none}
+}
+</style>
+</head>
+<body>
+<nav class="sr-only" aria-label="Pages">
+  <a href="/projects">Projects</a>
+  <a href="/paper">Daily AI newspaper</a>
+  <a href="/keymap">Sofle keymap</a>
+  <a href="/writing">Writing</a>
+</nav>
+<noscript>
+  <p>Jaakko. AI specialist and consultant, Helsinki.</p>
+  <p><a href="/projects">Projects</a> <a href="/paper">Paper</a> <a href="/keymap">Keymap</a> <a href="/writing">Writing</a></p>
+</noscript>
+
+<div id="app">
+  <main id="term" aria-label="Terminal">
+    <div id="screen">
+      <div id="out" role="log" aria-live="off"></div>
+      <div id="cmdLine" hidden>
+        <span id="prompt"></span><input id="cmd" type="text" aria-label="Command" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="go">
+      </div>
+    </div>
+  </main>
+
+  <div id="bottom">
+    <nav id="dock" aria-label="Quick commands">
+      <button class="chip" data-cmd="open projects">projects</button>
+      <button class="chip" data-cmd="open paper">paper</button>
+      <button class="chip" data-cmd="open keymap">keymap</button>
+      <button class="chip" data-cmd="open writing">writing</button>
+      <button class="chip" data-cmd="man jaakko">manual</button>
+      <button class="chip" data-cmd="contact">contact</button>
+      <button class="chip" data-cmd="help">help</button>
+    </nav>
+    <div id="status">
+      <span><span class="win">0:jsh*</span>[jaalip]</span>
+      <span id="statusMid"></span>
+      <span id="clock"></span>
+    </div>
+  </div>
+</div>
+
+<div id="overlay" role="dialog" aria-label="htop process viewer" hidden>
+  <div id="ovBody"></div>
+  <div id="ovKeys" aria-hidden="false">
+    <span class="fk">F1</span><span class="fl">Help</span>
+    <span class="fk">F3</span><span class="fl">Search</span>
+    <span class="fk">F6</span><span class="fl">SortBy</span>
+    <span class="fk">F9</span><span class="fl">Kill</span>
+    <button id="ovQuit" aria-label="Quit htop"><span class="fk">F10</span><span class="fl">Quit</span></button>
+  </div>
+</div>
+
+<script>
+(() => {
+'use strict';
+
+/* ================================================================
+   CONFIG: edit this block. Everything else reads from it.
+   demo: true  -> page links print a message instead of navigating.
+   demo: false -> "open" navigates to the route (use this in Astro).
+   ================================================================ */
+const CONFIG = {
+  demo: true,
+  user: 'guest',
+  host: 'kiroshi',
+  domain: 'jaalip.com',
+  owner: 'Jaakko',
+  role: 'AI specialist and consultant',
+  focus: 'Self-hosted, GDPR-compliant LLM platforms for EU enterprises',
+  stack: 'Kafka, Azure, Python, Proxmox, vLLM, observability',
+  location: 'Helsinki, FI (from Turku)',
+  langs: 'fi, en',
+  routes: {
+    projects: '/projects',
+    paper: '/paper',
+    keymap: '/keymap',
+    writing: '/writing',
+    thesis: '/projects/llm-eval-service',
+  },
+  contact: {
+    email: '[TODO]@jaalip.com',
+    github: 'https://github.com/[TODO]',
+    linkedin: 'https://www.linkedin.com/in/[TODO]',
+  },
+  log: [
+    { hash: 'a1f3c9e', ref: 'HEAD -> main', type: 'paper',    msg: 'daily AI newspaper goes live',                       cmd: 'open paper',    when: '[TODO date]' },
+    { hash: '7b2e410',                      type: 'keymap',   msg: 'Sofle layout quick reference',                       cmd: 'open keymap',   when: '[TODO date]' },
+    { hash: 'c94d1aa',                      type: 'projects', msg: 'side projects page',                                 cmd: 'open projects', when: '[TODO date]' },
+    { hash: '3e8f702',                      type: 'thesis',   msg: 'Kafka-native LLM evaluation service (LUT x Telia)',  cmd: 'open thesis',   when: 'spring 2026' },
+    { hash: '0d5b9c1',                      type: 'homelab',  msg: 'two-node Proxmox cluster with RTX 3090 passthrough', cmd: 'cat ~/projects/homelab.md', when: '[TODO date]' },
+  ],
+};
+
+/* Virtual filesystem under /home/guest */
+const FS = { type: 'dir', children: {
+  'projects': { type: 'dir', route: 'projects', children: {
+    'llm-eval-service.md': { type: 'file', route: 'thesis', body:
+`# LLM evaluation service
+Kafka-native microservice that scores LLM and RAG output as events flow through the pipeline.
+Built for my LUT master's thesis, together with Telia Finland.
+[TODO: link to repo or write-up]` },
+    'homelab.md': { type: 'file', body:
+`# Homelab
+Two-node Proxmox cluster with RTX 3090 GPU passthrough.
+Runs vLLM, Open WebUI, LiteLLM, Langfuse, SearXNG and n8n.
+Public traffic goes through a VPS with Pangolin. Private access uses Tailscale.
+[TODO: architecture diagram]` },
+    'agent-guidelines.md': { type: 'file', body:
+`# Agent development guidelines
+A guideline framework for building AI agents.
+Markdown content, plus CI that uses an LLM to generate skills.
+Status: planned.` },
+  }},
+  'paper': { type: 'dir', route: 'paper', children: {
+    'today.html': { type: 'file', route: 'paper', body: 'A daily HTML newspaper, written by a local LLM pipeline.' },
+  }},
+  'keymap': { type: 'dir', route: 'keymap', children: {
+    'sofle.md': { type: 'file', route: 'keymap', body: 'Quick reference for the layers on my Sofle split keyboard.' },
+  }},
+  'writing': { type: 'dir', route: 'writing', children: {
+    'README.md': { type: 'file', body: '[TODO: first posts]' },
+  }},
+  'contact.txt': { type: 'file', special: 'contact' },
+  'README.md': { type: 'file', body:
+`Welcome to ${CONFIG.domain}.
+This is a terminal, but you do not need to know Linux.
+Click anything underlined, or use the buttons at the bottom.
+Type help to see all commands.` },
+  '.secrets': { type: 'file', hidden: true, body:
+`API_KEY=****************
+
+# Real secrets live in a vault, not in a static site.
+# Nice try though.` },
+}};
+
+/* ---------------------------------------------------------------- */
+const RM = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const TOUCH = matchMedia('(pointer: coarse)').matches;
+const T0 = Date.now();
+const $ = s => document.querySelector(s);
+const out = $('#out'), term = $('#term'), cmdLine = $('#cmdLine'), input = $('#cmd'),
+      promptEl = $('#prompt'), statusMid = $('#statusMid'), clock = $('#clock'),
+      ov = $('#overlay'), ovBody = $('#ovBody'), ovQuit = $('#ovQuit');
+
+const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const rand = (a, b) => a + Math.random() * (b - a);
+
+const store = {
+  get(k) { try { return localStorage.getItem(k); } catch { return null; } },
+  set(k, v) { try { localStorage.setItem(k, v); } catch { /* storage off: fine */ } },
+};
+
+let introRunning = false, skip = false, cancel = false, cancelReason = '', busy = true;
+let anyKeyCancels = false, overlayOpen = false, mode = 'sh', queued = null;
+let closeOverlay = () => {};
+const hist = []; let hIdx = 0;
+let cwd = [];
+
+/* Interruptible sleep: skip or cancel resolves every pending wait at once */
+const pending = new Set();
+const fast = () => skip || cancel || RM;
+function sleep(ms) {
+  if (fast()) return Promise.resolve();
+  return new Promise(r => {
+    const done = () => { clearTimeout(t); pending.delete(done); r(); };
+    const t = setTimeout(done, ms);
+    pending.add(done);
+  });
+}
+const wait = ms => new Promise(r => setTimeout(r, ms));
+function flush() { [...pending].forEach(d => d()); }
+
+/* Output */
+let stick = true;
+term.addEventListener('scroll', () => { stick = term.scrollHeight - term.scrollTop - term.clientHeight < 48; }, { passive: true });
+function scroll(force) { if (stick || force) term.scrollTop = term.scrollHeight; }
+function print(html = '', cls = '') {
+  const d = document.createElement('div');
+  d.className = 'ln' + (cls ? ' ' + cls : '');
+  d.innerHTML = html;
+  out.appendChild(d);
+  scroll();
+  return d;
+}
+const printText = (t, cls) => print(esc(t), cls);
+const link = (html, cmd, href = '#') => `<a class="lnk" href="${esc(href)}" data-cmd="${esc(cmd)}">${html}</a>`;
+
+const dirName = () => cwd.length ? cwd[cwd.length - 1] : '~';
+const fullCwd = () => '~' + (cwd.length ? '/' + cwd.join('/') : '');
+function promptHTML() {
+  if (mode === 'vim') return '<span class="pv">:</span>';
+  return `<span class="pb">[</span><span class="pu">${CONFIG.user}</span><span class="pb">@</span><span class="ph">${CONFIG.host}</span> <span class="pd">${esc(dirName())}</span><span class="pb">]$</span> `;
+}
+function updateStatus() { statusMid.textContent = `${CONFIG.user}@${CONFIG.host}:${fullCwd()}`; }
+function showInput() {
+  cmdLine.hidden = false;
+  promptEl.innerHTML = promptHTML();
+  updateStatus();
+  scroll(true);
+  if (!TOUCH) input.focus({ preventScroll: true });
+}
+
+async function typeInto(el, text, { min = 40, max = 110 } = {}) {
+  for (let i = 0; i < text.length; i++) {
+    if (fast()) { el.textContent = text; return; }
+    el.textContent += text[i];
+    scroll();
+    await sleep(rand(min, max));
+  }
+}
+async function typeCmd(cmd) {
+  const d = print(promptHTML() + '<span class="typed echo"></span><span class="cur" aria-hidden="true"></span>');
+  await sleep(420);
+  await typeInto(d.querySelector('.typed'), cmd);
+  await sleep(260);
+  d.querySelector('.cur')?.remove();
+}
+
+/* ---------------- Content builders ---------------- */
+/* JL logo, option C (shadow block). Block and shadow layers are split so the gradient only hits the blocks. */
+const LOGO_BLOCK = [
+  '     ██  ██',
+  '     ██  ██',
+  '     ██  ██',
+  '██   ██  ██',
+  ' █████   ███████',
+  ' ',
+].join('\n');
+const LOGO_SHADOW = [
+  '       ╗   ╗',
+  '       ║   ║',
+  '       ║   ║',
+  '       ║   ║',
+  '╚     ╔╝        ╗',
+  ' ╚════╝  ╚══════╝',
+].join('\n');
+function logoHTML() {
+  return `<div class="logo live" aria-hidden="true">
+    <div class="logo-mark"><pre class="lg-block">${LOGO_BLOCK}</pre><pre class="lg-shadow">${LOGO_SHADOW}</pre></div>
+    <div class="lg-word">${esc(CONFIG.domain.split('.')[0])}<span class="lg-cur">▌</span></div>
+  </div>`;
+}
+function uptimeShort() {
+  const m = Math.floor((Date.now() - T0) / 60000);
+  return m < 1 ? 'just now (your visit)' : `${m} min${m === 1 ? '' : 's'} (your visit)`;
+}
+function fetchHTML() {
+  out.querySelectorAll('.logo.live').forEach(el => el.classList.remove('live'));
+  const rows = [
+    ['OS', `${CONFIG.domain} (Arch flavoured)`],
+    ['Host', `${CONFIG.host} (Proxmox node)`],
+    ['Kernel', '6.11.2-arch1-1'],
+    ['Uptime', uptimeShort()],
+    ['Shell', 'jsh 1.0'],
+    ['Owner', CONFIG.owner],
+    ['Role', CONFIG.role],
+    ['Focus', CONFIG.focus],
+    ['Stack', CONFIG.stack],
+    ['Location', CONFIG.location],
+    ['Langs', CONFIG.langs],
+  ];
+  const c1 = ['#1C2B38', '#E27878', '#7DBA94', '#E5B567', '#7CC4F0', '#B39DDB', '#6FC7C2', '#CFD9E2'];
+  const c2 = ['#3A4F61', '#F0A0A0', '#A6D6B5', '#F2D095', '#ABDAF7', '#D2C3EC', '#A3E0DC', '#F2F5F7'];
+  const sw = arr => arr.map(c => `<span class="sw" style="background:${c}"></span>`).join('');
+  return `<div class="fetch">
+    ${logoHTML()}
+    <div class="info">
+      <div><span class="pu">${CONFIG.user}</span>@<span class="ph">${CONFIG.host}</span></div>
+      <div class="sep">${'-'.repeat(CONFIG.user.length + CONFIG.host.length + 1)}</div>
+      ${rows.map(([k, v]) => `<div><span class="k">${k}</span>: ${esc(v)}</div>`).join('')}
+      <div class="swrow" aria-hidden="true">${sw(c1)}<br>${sw(c2)}</div>
+    </div>
+  </div>`;
+}
+function hrefFor(cmd) {
+  const m = /^open (\S+)/.exec(cmd);
+  return m && CONFIG.routes[m[1]] ? CONFIG.routes[m[1]] : '#';
+}
+function printLog(n = 5) {
+  CONFIG.log.slice(0, n).forEach(c => {
+    const ref = c.ref ? `<span class="ref">(${esc(c.ref)})</span> ` : '';
+    print(`<span class="hash">${c.hash}</span> ${ref}<span class="ty">${esc(c.type)}:</span> ${link(esc(c.msg), c.cmd, hrefFor(c.cmd))} <span class="dim">(${esc(c.when)})</span>`);
+  });
+}
+
+function resolve(p) {
+  let base;
+  if (!p || p === '.') return { node: nodeAt(cwd), path: [...cwd] };
+  if (p === '~' || p.startsWith('~/')) { base = []; p = p.slice(1); }
+  else if (p.startsWith('/home/guest')) { base = []; p = p.slice(11); }
+  else if (p.startsWith('/')) return null;
+  else base = [...cwd];
+  for (const seg of p.split('/').filter(Boolean)) {
+    if (seg === '.') continue;
+    if (seg === '..') { base.pop(); continue; }
+    base.push(seg);
+  }
+  const node = nodeAt(base);
+  return node ? { node, path: base } : null;
+}
+function nodeAt(path) {
+  let n = FS;
+  for (const s of path) {
+    if (n.type !== 'dir' || !n.children[s]) return null;
+    n = n.children[s];
+  }
+  return n;
+}
+
+function printLs(node, path, all = false, long = false) {
+  const names = Object.keys(node.children)
+    .filter(n => all || !node.children[n].hidden)
+    .sort((a, b) => a.replace(/^\./, '').localeCompare(b.replace(/^\./, '')));
+  const item = n => {
+    const ch = node.children[n];
+    const full = '~/' + [...path, n].join('/');
+    if (ch.type === 'dir') {
+      const cmd = ch.route ? `open ${ch.route}` : `ls ${full}`;
+      return link(`<span class="dir">${esc(n)}/</span>`, cmd, ch.route ? CONFIG.routes[ch.route] : '#');
+    }
+    return link(`<span class="${n.startsWith('.') ? 'hid' : 'file'}">${esc(n)}</span>`, `cat ${full}`);
+  };
+  if (long) {
+    print(`total ${names.length * 4}`);
+    names.forEach(n => {
+      const ch = node.children[n];
+      const perm = ch.type === 'dir' ? 'drwxr-xr-x' : '-rw-r--r--';
+      const size = ch.type === 'dir' ? 4096 : (ch.body ? ch.body.length : 312);
+      print(`<span class="dim">${perm} guest guest ${String(size).padStart(5)} Oct  7 09:41</span> ${item(n)}`);
+    });
+  } else {
+    print(names.map(item).join('  '));
+  }
+}
+
+function contactHTML() {
+  const c = CONFIG.contact;
+  const short = u => u.replace(/^https?:\/\/(www\.)?/, '');
+  return [
+    `<span class="k dir">email</span>     <a class="lnk" href="mailto:${esc(c.email)}">${esc(c.email)}</a>`,
+    `<span class="k dir">github</span>    <a class="lnk" href="${esc(c.github)}" target="_blank" rel="noopener">${esc(short(c.github))}</a>`,
+    `<span class="k dir">linkedin</span>  <a class="lnk" href="${esc(c.linkedin)}" target="_blank" rel="noopener">${esc(short(c.linkedin))}</a>`,
+  ].join('\n');
+}
+function printFile(r) {
+  const n = r.node;
+  if (n.special === 'contact') { print(contactHTML()); return; }
+  const lines = n.body.split('\n').map(l => l.startsWith('# ') ? `<span class="h1">${esc(l)}</span>` : esc(l));
+  print(lines.join('\n'));
+  if (n.route) print(`<span class="dim">Read more: </span>${link(esc('open ' + n.route), 'open ' + n.route, CONFIG.routes[n.route])}`);
+}
+
+const HELP = [
+  ['Pages', [['open <page>', 'go to projects, paper, keymap, writing or thesis'], ['contact', 'how to reach me']]],
+  ['Files', [['ls [dir]', 'list files (-a also shows hidden ones)'], ['cd <dir>', 'change directory'], ['cat <file>', 'print a file']]],
+  ['About', [['fastfetch', 'summary card'], ['man jaakko', 'the manual page'], ['git log', 'recent work'], ['htop', 'process view (simulated)']]],
+  ['Shell', [['history', 'previous commands'], ['clear', 'clear the screen'], ['whoami, uname -a, date, uptime', 'the usual']]],
+];
+function printHelp(title) {
+  if (title) printText(title);
+  HELP.forEach(([g, rows]) => {
+    print(`<span class="grp">${g}</span>`, 'block');
+    const cells = rows.map(([c, d]) => {
+      const run = c.split(/[ ,]/)[0] === 'man' ? 'man jaakko' : c.split(/ <| \[|,/)[0];
+      return `<span class="hc">${link(esc(c), run)}</span><span class="hd">${esc(d)}</span>`;
+    }).join('');
+    print(`<div class="help">${cells}</div>`, 'block');
+  });
+  print('<span class="dim">Tab completes. Up and down walk the history. Ctrl+C stops a command. Ctrl+L clears.</span>');
+  print('<span class="dim">Some commands are not on this list.</span>');
+}
+
+function manHTML() {
+  const d = new Date();
+  const ym = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+  return `<div class="man">
+    <div class="mh"><span>JAAKKO(1)</span><span>User Commands</span><span>JAAKKO(1)</span></div>
+    <h3>NAME</h3><p>jaakko - AI specialist and consultant, Helsinki</p>
+    <h3>SYNOPSIS</h3><p>jaakko [--consult] [--build] [--evaluate] &lt;problem&gt;</p>
+    <h3>DESCRIPTION</h3>
+    <p>Designs self-hosted, GDPR-compliant LLM platforms for EU enterprises.</p>
+    <p>Works across the full chain: infrastructure, model serving, event pipelines, observability and evaluation. Prefers simple systems that you can trace and reproduce.</p>
+    <h3>OPTIONS</h3>
+    <dl>
+      <dt>--consult</dt><dd>AI systems design and AI governance for EU-sovereign infrastructure.</dd>
+      <dt>--build</dt><dd>DevOps, Kafka event pipelines, Azure and Python services.</dd>
+      <dt>--evaluate</dt><dd>LLM and RAG evaluation. See ${link('thesis(7)', 'open thesis', CONFIG.routes.thesis)}.</dd>
+    </dl>
+    <h3>ENVIRONMENT</h3><p>LANG=fi_FI.UTF-8 en_US.UTF-8<br>TZ=Europe/Helsinki</p>
+    <h3>FILES</h3><p>${['projects', 'paper', 'keymap', 'writing'].map(r => link('~/' + r, 'open ' + r, CONFIG.routes[r])).join('   ')}</p>
+    <h3>BUGS</h3><p>Upgrades the homelab when he should sleep. Has strong opinions about split keyboards.</p>
+    <h3>SEE ALSO</h3><p>${link('contact(1)', 'contact')}, ${link('fastfetch(1)', 'fastfetch')}, ${link('git-log(1)', 'git log')}</p>
+    <div class="mh" style="margin-top:1em"><span>${CONFIG.domain}</span><span>${ym}</span><span>JAAKKO(1)</span></div>
+  </div>`;
+}
+function hintHTML() {
+  return `<span class="dim">Pick a page below, click anything underlined, or type </span>${link('help', 'help')}<span class="dim">.</span>`;
+}
+
+function openPage(name) {
+  if (!name) { printText('usage: open <page>   (projects, paper, keymap, writing, thesis)'); return; }
+  const key = name.replace(/^~\//, '').replace(/\/$/, '');
+  let route = CONFIG.routes[key];
+  if (!route) { const r = resolve(name); if (r && r.node.route) route = CONFIG.routes[r.node.route]; }
+  if (!route) { printText(`open: ${name}: no such page`, 'err'); return; }
+  print(`Opening <span class="ph">${esc(CONFIG.domain + route)}</span>`);
+  if (CONFIG.demo) print('<span class="dim">(demo build: routes are not wired yet)</span>');
+  else location.href = route;
+}
+
+/* ---------------- Easter egg engines ---------------- */
+async function progress(label, width = 20, step = 55) {
+  const d = print('');
+  for (let i = 0; i <= width; i++) {
+    d.innerHTML = `${esc(label.padEnd(16))} [${'#'.repeat(i)}${'-'.repeat(width - i)}] ${String(Math.round(i / width * 100)).padStart(3)}%`;
+    scroll();
+    if (i < width) await sleep(step);
+    if (cancel) return false;
+  }
+  return true;
+}
+async function pacmanUpgrade() {
+  printText('error: you cannot perform this operation unless you are root.', 'err');
+  await sleep(500);
+  print('<span class="dim">Running a pretend upgrade for guests instead.</span>');
+  await sleep(400);
+  print('<span class="colon">::</span> Synchronizing package databases...');
+  if (!await progress(' core', 20, 40)) return;
+  if (!await progress(' extra', 20, 45)) return;
+  print('<span class="colon">::</span> Starting full system upgrade...');
+  await sleep(300); printText('resolving dependencies...');
+  await sleep(250); printText('looking for conflicting packages...');
+  print(); printText('Packages (3) coffee-26.10-1  curiosity-2.1-1  sisu-1.0-2'); print();
+  const q = print('<span class="colon">::</span> Proceed with installation? [Y/n] <span class="typed echo"></span>');
+  await sleep(600); await typeInto(q.querySelector('.typed'), 'y');
+  for (const [i, p] of ['coffee', 'curiosity', 'sisu'].entries()) {
+    if (!await progress(`(${i + 1}/3) ${p}`, 20, 40)) return;
+  }
+  print('<span class="colon">::</span> Running post-transaction hooks...');
+  await sleep(300);
+  printText('(1/1) Reminding guest to read the Arch news... done');
+}
+
+async function fakeWipe() {
+  print(`[sudo] password for ${CONFIG.user}: `);
+  await sleep(700);
+  const files = ['/boot/vmlinuz-linux', '/etc/fstab', '/etc/pacman.conf', '/usr/bin/jsh', '/var/log/journal',
+                 '/home/guest/projects', '/home/guest/.bash_history', '/home/guest/sense-of-humour'];
+  for (const f of files) {
+    if (cancel) return;
+    printText(`removed '${f}'`, 'dim');
+    await sleep(rand(90, 220));
+  }
+  await sleep(800);
+  if (!cancel) printText('Just kidding. This is a static site. Nothing here deletes that easily.');
+}
+
+const TRAIN = String.raw`      ~  ~   ~
+     ~    ~
+   ___||____     ______________   ______________
+  |  _____  |___|              |_|              |
+  | |_|_|_| |  ||    jaalip    | |   express    |
+  |_________|__||______________|_|______________|
+   (O)   (O)      (O)      (O)     (O)      (O)`;
+async function sl() {
+  const wrap = print('', 'trainwrap');
+  const pre = document.createElement('pre');
+  pre.className = 'train'; pre.textContent = TRAIN;
+  wrap.appendChild(pre);
+  if (RM) { pre.style.position = 'static'; wrap.style.height = 'auto'; printText('The train is parked. Reduced motion is on.', 'dim'); return; }
+  anyKeyCancels = true;
+  const W = wrap.clientWidth, w = pre.scrollWidth, dur = 3800, t0 = performance.now();
+  await new Promise(res => {
+    const f = t => {
+      const p = Math.min(1, (t - t0) / dur);
+      pre.style.transform = `translateX(${W - (W + w) * p}px)`;
+      if (p < 1 && !cancel) requestAnimationFrame(f); else res();
+    };
+    requestAnimationFrame(f);
+  });
+  wrap.remove();
+  print('<span class="dim">The train left. You typed sl, not ls.</span>');
+}
+
+const MOOSE = String.raw`     \
+      \   \|/        \|/
+           \\________//
+            (  o   o  )
+             \       /_________
+              \_   _/          \__
+                \_/  |  |-----|  |
+                     |  |     |  |`;
+function moosesay(msg) {
+  msg = (msg || 'Moi.').slice(0, 200);
+  const words = msg.split(/\s+/), lines = []; let cur = '';
+  for (const w of words) { if ((cur + ' ' + w).trim().length > 34) { lines.push(cur); cur = w; } else cur = (cur + ' ' + w).trim(); }
+  if (cur) lines.push(cur);
+  const W = Math.max(...lines.map(l => l.length));
+  const body = lines.length === 1 ? [`< ${lines[0]} >`] : lines.map((l, i) => {
+    const [a, b] = i === 0 ? ['/', '\\'] : i === lines.length - 1 ? ['\\', '/'] : ['|', '|'];
+    return `${a} ${l.padEnd(W)} ${b}`;
+  });
+  printText([' ' + '_'.repeat(W + 2), ...body, ' ' + '-'.repeat(W + 2), MOOSE].join('\n'));
+}
+
+async function matrix() {
+  if (RM) { printText('Reduced motion is on, so the rain stays off.', 'dim'); return; }
+  const c = document.createElement('canvas');
+  c.className = 'matrix'; c.setAttribute('aria-hidden', 'true');
+  document.body.appendChild(c);
+  const dpr = Math.min(2, devicePixelRatio || 1);
+  const w = innerWidth, h = innerHeight;
+  c.width = w * dpr; c.height = h * dpr;
+  const ctx = c.getContext('2d'); ctx.scale(dpr, dpr);
+  const fs = 16, cols = Math.ceil(w / fs);
+  const drops = Array.from({ length: cols }, () => rand(-40, 0));
+  const chars = 'アイウエオカキクケコサシスセソタチツテト0123456789ÄÖÅäöå<>/{}#$';
+  anyKeyCancels = true;
+  c.addEventListener('pointerdown', () => { cancel = true; });
+  const end = performance.now() + 7000;
+  await new Promise(res => {
+    let last = 0;
+    const f = t => {
+      if (t - last > 50) {
+        last = t;
+        ctx.fillStyle = 'rgba(15,26,36,.2)'; ctx.fillRect(0, 0, w, h);
+        ctx.font = `${fs}px "Martian Mono", ui-monospace, monospace`;
+        for (let i = 0; i < cols; i++) {
+          const y = drops[i] * fs;
+          ctx.fillStyle = Math.random() < .05 ? '#F2F5F7' : (i % 7 === 0 ? '#7CC4F0' : '#7DBA94');
+          ctx.fillText(chars[Math.floor(Math.random() * chars.length)], i * fs, y);
+          if (y > h && Math.random() > .975) drops[i] = 0;
+          drops[i]++;
+        }
+      }
+      if (t < end && !cancel) requestAnimationFrame(f); else res();
+    };
+    requestAnimationFrame(f);
+  });
+  c.style.opacity = '0';
+  await wait(300);
+  c.remove();
+  print('<span class="dim">Back to the terminal. The rain had ä and ö in it.</span>');
+}
+
+async function sauna() {
+  printText('Heating the kiuas (sauna stove)...');
+  const d = print('');
+  for (let t = 20; t <= 80; t += 4) {
+    const n = Math.round((t - 20) / 60 * 20);
+    d.innerHTML = `<span class="dim">temp</span> [<span class="heat">${'#'.repeat(n)}</span>${'-'.repeat(20 - n)}] ${t}°C`;
+    scroll();
+    await sleep(110);
+    if (cancel) return;
+  }
+  await sleep(300);
+  printText('Löyly! The steam hits the ceiling.');
+  printText('Sauna valmis. Drink water, then go swim in the lake.');
+}
+
+const CUP = String.raw`    ( (
+     ) )
+  .______.
+  |      |]
+  \      /
+   '----'`;
+async function brew() {
+  printText('Brewing kahvi...');
+  if (!await progress('kahvinkeitin', 20, 70)) return;
+  print(`<pre class="art" style="color:var(--amber)">${esc(CUP)}</pre>`, 'block');
+  printText('Finns drink more coffee per person than almost any other country. Kahvi on valmis.');
+}
+
+async function ping(a) {
+  const h = a.find(x => !x.startsWith('-')) || CONFIG.host;
+  const ips = { kiroshi: '10.0.0.11', netwatch: '203.0.113.42', 'jaalip.com': '203.0.113.42', localhost: '127.0.0.1' };
+  const ip = ips[h];
+  if (!ip) { printText(`ping: ${h}: Name or service not known`, 'err'); return; }
+  printText(`PING ${h} (${ip}) 56(84) bytes of data.`);
+  const base = (h === 'kiroshi' || h === 'localhost') ? 0.3 : 7.8;
+  const times = [];
+  for (let i = 1; i <= 4; i++) {
+    if (cancel) break;
+    const t = +(base + Math.random() * base * .6).toFixed(3);
+    times.push(t);
+    printText(`64 bytes from ${h} (${ip}): icmp_seq=${i} ttl=64 time=${t.toFixed(3)} ms`);
+    if (i < 4) await sleep(700);
+  }
+  print();
+  printText(`--- ${h} ping statistics ---`);
+  printText(`${times.length} packets transmitted, ${times.length} received, 0% packet loss`);
+  if (times.length) {
+    const avg = times.reduce((x, y) => x + y, 0) / times.length;
+    printText(`rtt min/avg/max = ${Math.min(...times).toFixed(3)}/${avg.toFixed(3)}/${Math.max(...times).toFixed(3)} ms`);
+  }
+}
+
+function nvidiaSmi() {
+  const util = Math.round(rand(82, 97)), mem = Math.round(rand(21700, 22400)), temp = Math.round(rand(63, 71)), pwr = Math.round(rand(290, 340));
+  const t = `+-----------------------------------------------------------------------------+
+| NVIDIA-SMI 560.35       Driver Version: 560.35       CUDA Version: 12.6       |
+|-------------------------------+----------------------+----------------------+
+| GPU  Name        Persistence-M| Bus-Id        Disp.A | Volatile Uncorr. ECC |
+| Fan  Temp  Perf  Pwr:Usage/Cap|         Memory-Usage | GPU-Util  Compute M. |
+|===============================+======================+======================|
+|   0  RTX 3090            On   | 00000000:01:00.0 Off |                  N/A |
+| 61%   ${temp}C    P2   ${pwr}W / 350W |  ${mem}MiB / 24576MiB |     ${util}%      Default |
++-------------------------------+----------------------+----------------------+
+| Processes:                                                                  |
+|  GPU    PID   Type   Process name                             GPU Memory    |
+|    0   1842      C   vllm serve Qwen/Qwen3-27B                  ${mem - 120}MiB    |
++-----------------------------------------------------------------------------+`;
+  print(`<div class="scroll-x"><pre>${esc(t)}</pre></div>`, 'block');
+  print('<span class="dim">(simulated)</span>');
+}
+function dockerPs() {
+  const rows = [
+    ['3f2a91c0d7e1', 'vllm/vllm-openai', 'Up 12 days', 'vllm'],
+    ['9b0e44a1c2f8', 'ghcr.io/berriai/litellm', 'Up 12 days', 'litellm'],
+    ['c71d2e93ab40', 'ghcr.io/open-webui/open-webui', 'Up 9 days', 'open-webui'],
+    ['5e88f1b6d903', 'langfuse/langfuse', 'Up 9 days', 'langfuse'],
+    ['a4c3d2e1f0b9', 'searxng/searxng', 'Up 9 days', 'searxng'],
+    ['0f9e8d7c6b5a', 'n8nio/n8n', 'Up 3 days', 'n8n'],
+  ];
+  const fmt = r => `${r[0].padEnd(14)} ${r[1].padEnd(31)} ${r[2].padEnd(12)} ${r[3]}`;
+  print(`<div class="scroll-x"><pre>${esc(fmt(['CONTAINER ID', 'IMAGE', 'STATUS', 'NAMES']))}\n${rows.map(r => esc(fmt(r))).join('\n')}</pre></div>`, 'block');
+  print('<span class="dim">(simulated)</span>');
+}
+
+/* ---------------- htop ---------------- */
+const PROCS = [
+  { pid: 1842, user: 'vllm',    cmd: 'vllm serve Qwen/Qwen3-27B',                 cpu: 85,  mem: 16.8, virt: '38.2G', res: '21.4G', time: 24723 },
+  { pid: 1203, user: 'kafka',   cmd: 'java -Xmx4G kafka.Kafka server.properties', cpu: 9,   mem: 3.4,  virt: '9.1G',  res: '4.3G',  time: 6120 },
+  { pid: 2210, user: 'litellm', cmd: 'litellm --config /etc/litellm/config.yaml', cpu: 4,   mem: 0.6,  virt: '2.1G',  res: '780M',  time: 1830 },
+  { pid: 2318, user: 'webui',   cmd: 'open-webui serve',                          cpu: 3,   mem: 0.9,  virt: '3.2G',  res: '1.1G',  time: 1204 },
+  { pid: 1377, user: 'ollama',  cmd: 'ollama serve',                              cpu: 2,   mem: 1.2,  virt: '5.0G',  res: '1.5G',  time: 980 },
+  { pid: 2402, user: 'lfuse',   cmd: 'node langfuse/web/server.js',               cpu: 2,   mem: 0.7,  virt: '2.8G',  res: '890M',  time: 860 },
+  { pid: 2511, user: 'n8n',     cmd: 'n8n start',                                 cpu: 1,   mem: 0.4,  virt: '1.9G',  res: '520M',  time: 410 },
+  { pid: 2640, user: 'searxng', cmd: 'uwsgi --ini searxng.ini',                   cpu: 1,   mem: 0.2,  virt: '900M',  res: '260M',  time: 300 },
+  { pid: 911,  user: 'caddy',   cmd: 'caddy run --config /etc/caddy/Caddyfile',   cpu: 0.5, mem: 0.1,  virt: '1.2G',  res: '64M',   time: 120 },
+  { pid: 4096, user: 'guest',   cmd: 'jsh',                                       cpu: 0.3, mem: 0.0,  virt: '20M',   res: '8M',    time: 2 },
+];
+function hbar(label, pct, txt, cls = 'bar', W = 26) {
+  const n = Math.round(Math.min(100, Math.max(0, pct)) / 100 * W);
+  const cells = ('|'.repeat(n) + ' '.repeat(W - n)).split('');
+  const barPart = cells.slice(0, W - txt.length).join('');
+  return `<span class="hl">${label}</span>[<span class="${cls}">${esc(barPart)}</span><span class="dim">${esc(txt)}</span>]`;
+}
+const walk = (v, lo, hi, step) => Math.min(hi, Math.max(lo, v + rand(-step, step)));
+function htop() {
+  return new Promise(res => {
+    const st = { cpu: [62, 34, 48, 21], mem: 52.6, gpu: 21.9, load: [1.12, .94, .8], up: 12 * 86400 + 4 * 3600 + 13 * 60 };
+    const render = () => {
+      st.cpu = st.cpu.map(v => walk(v, 4, 99, 14));
+      st.mem = walk(st.mem, 48, 58, .6);
+      st.gpu = walk(st.gpu, 21.2, 22.4, .2);
+      st.load = st.load.map(v => walk(v, .4, 2.4, .08));
+      st.up += 1;
+      PROCS.forEach(p => { p.cpu = Math.max(0, walk(p.cpu, 0, p.pid === 1842 ? 99 : 18, p.pid === 1842 ? 6 : 1.2)); p.time += p.cpu / 100; });
+      const left = st.cpu.map((v, i) => hbar(String(i).padStart(3), v, v.toFixed(1) + '%')).join('\n')
+        + '\n' + hbar('Mem', st.mem / 128 * 100, `${st.mem.toFixed(1)}G/128G`, 'bar mem')
+        + '\n' + hbar('GPU', st.gpu / 24 * 100, `${st.gpu.toFixed(1)}G/24.0G`, 'bar gpu');
+      const d = Math.floor(st.up / 86400), hh = Math.floor(st.up % 86400 / 3600), mm = Math.floor(st.up % 3600 / 60), ss = st.up % 60;
+      const right = `<span class="hl">Tasks:</span> 87, 312 thr; 2 running\n<span class="hl">Load average:</span> ${st.load.map(v => v.toFixed(2)).join(' ')}\n<span class="hl">Uptime:</span> ${d} days, ${String(hh).padStart(2, '0')}:${String(mm).padStart(2, '0')}:${String(ss).padStart(2, '0')}`;
+      const head = '  PID USER      PRI  NI   VIRT    RES S  CPU% MEM%     TIME+  Command';
+      const tf = t => `${Math.floor(t / 60)}:${(t % 60).toFixed(2).padStart(5, '0')}`;
+      const rows = [...PROCS].sort((a, b) => b.cpu - a.cpu).map(p =>
+        esc(`${String(p.pid).padStart(5)} ${p.user.padEnd(8)}   20   0 ${p.virt.padStart(6)} ${p.res.padStart(6)} ${p.cpu > 5 ? 'R' : 'S'} ${p.cpu.toFixed(1).padStart(5)} ${p.mem.toFixed(1).padStart(4)} ${tf(p.time).padStart(9)}  `) + `<span class="pcmd">${esc(p.cmd)}</span>`
+      ).join('\n');
+      ovBody.innerHTML = `<p class="dim ovnote">htop with simulated values, not live telemetry. Press q to quit.</p>
+        <div class="htop-top"><pre>${left}</pre><pre>${right}</pre></div>
+        <div class="tbl"><pre><span class="thead">${esc(head)}</span>\n${rows}</pre></div>`;
+    };
+    render();
+    const iv = setInterval(render, 1000);
+    overlayOpen = true; ov.hidden = false; ovQuit.focus();
+    closeOverlay = () => {
+      clearInterval(iv); ov.hidden = true; overlayOpen = false;
+      closeOverlay = () => {};
+      res();
+    };
+  });
+}
+ovQuit.addEventListener('click', () => closeOverlay());
+
+/* ---------------- Commands ---------------- */
+const ENV = { USER: CONFIG.user, HOME: '/home/guest', SHELL: '/usr/bin/jsh', HOSTNAME: CONFIG.host, LANG: 'fi_FI.UTF-8', TZ: 'Europe/Helsinki', EDITOR: 'vim' };
+const expand = s => s.replace(/\$(\w+)/g, (_, k) => k === 'PWD' ? '/home/guest' + (cwd.length ? '/' + cwd.join('/') : '') : (ENV[k] ?? ''));
+const readOnly = (c, a) => printText(`${c}: cannot modify '${a.filter(x => !x.startsWith('-')).pop() || ''}': Read-only file system`, 'err');
+const FORTUNES = [
+  'The best GPU is the one that is already passed through.',
+  'There is no cloud. There is only a data center, ideally inside the EU.',
+  'Your offsets are committed. Your feelings are not.',
+  'In Finland, silence is a feature, not a bug.',
+  'It works on kiroshi.',
+  'Read the Arch news before you upgrade.',
+  'A log line today saves a war room tomorrow.',
+  'If it is not in the trace, it did not happen.',
+];
+
+const C = {
+  help: () => printHelp(),
+  '?': () => printHelp(),
+  apua: () => printHelp('Apua tulossa. (Help is on the way.)'),
+  ls: a => {
+    const flags = a.filter(x => x.startsWith('-')).join('');
+    const tgt = a.find(x => !x.startsWith('-'));
+    if (tgt && tgt.startsWith('/') && !tgt.startsWith('/home/guest')) {
+      print(['bin', 'boot', 'dev', 'etc', 'home', 'opt', 'proc', 'srv', 'usr', 'var'].map(d => `<span class="dir">${d}</span>`).join('  '));
+      print('<span class="dim">Guests can look, not touch.</span>');
+      return;
+    }
+    const r = resolve(tgt);
+    if (!r) { printText(`ls: cannot access '${tgt}': No such file or directory`, 'err'); return; }
+    if (r.node.type !== 'dir') { print(link(esc(tgt), `cat ${tgt}`)); return; }
+    printLs(r.node, r.path, flags.includes('a'), flags.includes('l'));
+  },
+  ll: a => C.ls(['-la', ...a]),
+  la: a => C.ls(['-a', ...a]),
+  dir: a => C.ls(a),
+  cd: a => {
+    const t = a[0];
+    if (!t || t === '~') { cwd = []; return; }
+    if (t.startsWith('/') && !t.startsWith('/home/guest')) { printText(`jsh: cd: ${t}: Permission denied`, 'err'); return; }
+    const r = resolve(t);
+    if (!r) { printText(`jsh: cd: ${t}: No such file or directory`, 'err'); return; }
+    if (r.node.type !== 'dir') { printText(`jsh: cd: ${t}: Not a directory`, 'err'); return; }
+    cwd = r.path;
+  },
+  'cd..': () => C.cd(['..']),
+  pwd: () => printText(expand('$PWD')),
+  cat: a => {
+    if (!a.length) { printText('usage: cat <file>   (try: cat README.md)'); return; }
+    for (const t of a) {
+      const r = resolve(t);
+      if (!r) { printText(`cat: ${t}: No such file or directory`, 'err'); continue; }
+      if (r.node.type === 'dir') { printText(`cat: ${t}: Is a directory`, 'err'); continue; }
+      printFile(r);
+    }
+  },
+  less: a => C.cat(a), more: a => C.cat(a), bat: a => C.cat(a),
+  open: a => openPage(a[0]), 'xdg-open': a => openPage(a[0]),
+  projects: () => openPage('projects'), paper: () => openPage('paper'), keymap: () => openPage('keymap'),
+  writing: () => openPage('writing'), blog: () => openPage('writing'), thesis: () => openPage('thesis'),
+  contact: () => print(contactHTML()),
+  fastfetch: () => print(fetchHTML(), 'block'),
+  neofetch: () => { print('<span class="dim">neofetch is archived upstream. Running fastfetch instead.</span>'); C.fastfetch(); },
+  man: a => {
+    const t = a[a.length - 1];
+    if (!t) { printText('What manual page do you want?\nFor example, try: man jaakko'); return; }
+    if (t === 'jaakko' || t === 'jaalip') { print(manHTML(), 'block'); return; }
+    if (t === 'man') { printText('The manual for manuals is not installed. Try: man jaakko'); return; }
+    printText(`No manual entry for ${t}`, 'err');
+  },
+  git: a => {
+    const sub = a[0] || '';
+    if (sub === 'log' || sub === 'lg') { printLog(); return; }
+    if (sub === 'status') { printText("On branch main\nYour branch is up to date with 'origin/main'.\n\nnothing to commit, working tree clean"); return; }
+    if (sub === 'blame') { printText('Every line: Jaakko. No one else to blame.'); return; }
+    if (sub === 'push') { printText(a.includes('--force') || a.includes('-f') ? 'remote: Force push rejected. Not on main. Not today.' : 'Everything up-to-date', a.includes('--force') || a.includes('-f') ? 'err' : ''); return; }
+    if (sub === 'pull') { printText('Already up to date.'); return; }
+    if (sub === 'commit') { printText('On branch main\nnothing to commit. Guests do not get write access.'); return; }
+    if (!sub) { printText('usage: git log | status | blame'); return; }
+    printText(`git: '${sub}' is not a git command. See 'git --help'.`, 'err');
+  },
+  htop: () => htop(), top: () => htop(), btop: () => htop(),
+  'nvidia-smi': () => nvidiaSmi(),
+  docker: a => { if (a[0] === 'ps') dockerPs(); else printText(`docker: '${a[0] || ''}' is not available for guests. Try: docker ps`, 'err'); },
+  history: () => hist.forEach((h, i) => printText(`${String(i + 1).padStart(5)}  ${h}`)),
+  clear: () => { out.innerHTML = ''; },
+  cls: () => { out.innerHTML = ''; print('<span class="dim">cls: this is not Windows. Cleared anyway.</span>'); },
+  whoami: () => printText(CONFIG.user),
+  who: () => { printText(`${CONFIG.user.padEnd(8)} tty1     just now`); printText('jaakko   pts/0    somewhere in Helsinki'); },
+  id: () => printText('uid=1000(guest) gid=1000(guest) groups=1000(guest),998(curious)'),
+  hostname: () => printText(CONFIG.host),
+  uname: a => printText(a.includes('-a') ? `Linux ${CONFIG.host} 6.11.2-arch1-1 #1 SMP PREEMPT_DYNAMIC x86_64 GNU/Linux` : 'Linux'),
+  date: () => printText(new Date().toLocaleString('en-GB', { timeZone: 'Europe/Helsinki', dateStyle: 'full', timeStyle: 'long' })),
+  uptime: () => {
+    const now = new Date().toLocaleTimeString('en-GB', { timeZone: 'Europe/Helsinki' });
+    const m = Math.floor((Date.now() - T0) / 60000);
+    printText(` ${now} up 12 days, ${m} min,  1 user,  load average: 0.42, 0.37, 0.31`);
+  },
+  echo: (a, line) => printText(expand(line.replace(/^\s*echo\s?/, ''))),
+  env: () => Object.entries(ENV).forEach(([k, v]) => printText(`${k}=${v}`)),
+  printenv: () => C.env(),
+  which: a => { const t = a[0]; if (!t) return; printText(C[t] ? `/usr/bin/${t}` : `which: no ${t} in (/usr/bin)`, C[t] ? '' : 'err'); },
+  exit: async () => { printText('logout'); await wait(500); out.innerHTML = ''; cwd = []; mode = 'sh'; await intro({ boot: false, auto: false }); },
+  logout: () => C.exit(),
+  reboot: async () => { out.innerHTML = ''; cwd = []; mode = 'sh'; await intro({ boot: true, auto: true }); },
+  poweroff: async () => { printText('Guests cannot power off this machine. Rebooting instead.'); await wait(900); await C.reboot(); },
+  shutdown: () => C.poweroff(), halt: () => C.poweroff(),
+
+  /* Easter eggs */
+  sudo: async (a, line) => {
+    if (!a.length) { printText('usage: sudo <command>'); return; }
+    print(`[sudo] password for ${CONFIG.user}: `);
+    await sleep(1100);
+    printText(`${CONFIG.user} is not in the sudoers file. This incident will be reported.`, 'err');
+    await sleep(500);
+    print('<span class="dim">Reported to: nobody. Relax.</span>');
+  },
+  su: () => printText('su: Authentication failure', 'err'),
+  please: () => printText('Manners noted. Still no root.'),
+  rm: a => { if (!a.length) printText('rm: missing operand', 'err'); else readOnly('rm', a); },
+  mkdir: a => readOnly('mkdir', a), touch: a => readOnly('touch', a), mv: a => readOnly('mv', a),
+  cp: a => readOnly('cp', a), chmod: a => readOnly('chmod', a), chown: a => readOnly('chown', a),
+  kill: () => printText('kill: guests cannot kill processes. htop shows them, though.', 'err'),
+  pacman: a => {
+    const op = a[0] || '';
+    if (!op) { printText('error: no operation specified (use -h for help)', 'err'); return; }
+    if (/^-S\w*y\w*u/.test(op)) return pacmanUpgrade();
+    if (op.startsWith('-S')) {
+      const pkg = a[1];
+      if (!pkg) { printText('error: no targets specified (use -h for help)', 'err'); return; }
+      if (pkg === 'coffee' || pkg === 'kahvi') return brew();
+      if (pkg === 'sauna') return sauna();
+      printText(`error: target not found: ${pkg}`, 'err'); return;
+    }
+    if (op.startsWith('-Q')) { ['coffee 26.10-1', 'curiosity 2.0-1', 'jsh 1.0-1', 'sisu 1.0-1', 'vim 9.1-1'].forEach(p => printText(p)); return; }
+    if (op.startsWith('-R')) { printText('error: you cannot perform this operation unless you are root.', 'err'); return; }
+    printText(`error: invalid option '${op}'`, 'err');
+  },
+  yay: () => { printText('yay: AUR helpers are not installed on this machine.'); print('<span class="dim">Read the PKGBUILD anyway.</span>'); },
+  paru: () => C.yay(),
+  vim: () => {
+    mode = 'vim';
+    for (let i = 0; i < 4; i++) print('<span class="tilde">~</span>');
+    print('<span class="dim">"[No Name]" 0L, 0B</span>');
+    print('<span class="dim">You are in vim now. Type :q and press Enter to leave.</span>');
+  },
+  vi: () => C.vim(), nvim: () => C.vim(),
+  emacs: () => printText('emacs: not installed. A fine operating system, though. Try vim.'),
+  nano: () => printText('nano: a sensible choice. Also not installed.'),
+  ':q': () => printText('You are not in vim. The reflex is strong, though.'),
+  ':wq': () => C[':q'](), q: () => C[':q'](),
+  sl: () => sl(),
+  cowsay: (a, line) => { print('<span class="dim">No cows here. A moose volunteered.</span>'); moosesay(line.replace(/^\s*cowsay\s?/, '') || 'Moo.'); },
+  moosesay: (a, line) => moosesay(line.replace(/^\s*moosesay\s?/, '')),
+  matrix: () => matrix(), cmatrix: () => matrix(),
+  sauna: () => sauna(), löyly: () => sauna(), loyly: () => sauna(),
+  kahvi: () => brew(), coffee: () => brew(),
+  make: a => {
+    if (!a.length) { printText('make: *** No targets specified and no makefile found.  Stop.', 'err'); return; }
+    if (a.join(' ') === 'coffee') { printText("make: *** No rule to make target 'coffee'.  Stop.", 'err'); print('<span class="dim">Try: kahvi</span>'); return; }
+    printText(`make: *** No rule to make target '${a[0]}'.  Stop.`, 'err');
+  },
+  sisu: () => printText('sisu (n.), Finnish: grit that shows up when the easy options are gone.\nAlso how this site got finished.'),
+  moi: () => printText('Moi! Finnish works here too. Try: apua'),
+  hei: () => C.moi(), terve: () => C.moi(), moikka: () => C.moi(), moro: () => C.moi(),
+  kiitos: () => printText('Ole hyvä.'),
+  thanks: () => printText("You're welcome."),
+  turku: () => printText('Turku: the oldest city in Finland and its former capital.\nThis terminal has a Turku accent. Mää ja sää.'),
+  ssh: a => {
+    const h = (a.find(x => !x.startsWith('-')) || '').split('@').pop();
+    if (!h) { printText('usage: ssh <host>'); return; }
+    printText(`ssh: connect to host ${h} port 22: Connection refused`, 'err');
+    print(`<span class="dim">${h === 'netwatch' ? '(netwatch only talks to keys it knows.)' : '(Nice try.)'}</span>`);
+  },
+  ping: a => ping(a),
+  curl: a => {
+    const u = (a.find(x => !x.startsWith('-')) || '').replace(/^https?:\/\//, '').replace(/\/$/, '');
+    if (!u) { printText("curl: try 'curl jaalip.com'"); return; }
+    if (u === CONFIG.domain || u === 'localhost') {
+      printText(`${CONFIG.domain}, plain text edition\n\n${CONFIG.owner}. ${CONFIG.role}. Helsinki.\n${CONFIG.focus}.\n\nPages: ${Object.values(CONFIG.routes).slice(0, 4).join('  ')}`);
+      return;
+    }
+    if (u.startsWith('wttr.in')) { printText('Helsinki: dark, probably. Check a window.'); return; }
+    printText(`curl: (6) Could not resolve host: ${u}`, 'err');
+  },
+  fortune: () => printText(FORTUNES[Math.floor(Math.random() * FORTUNES.length)]),
+  xyzzy: () => printText('Nothing happens.'),
+  '42': () => printText('Correct answer. The question is still in code review.'),
+  hello: () => printText('Hello. Type help to see what this shell can do.'),
+  hi: () => C.hello(),
+  btw: () => printText('We know. Everyone knows.'),
+  theme: () => printText('There is only dark mode here.\nHelsinki gets less than six hours of daylight in December.'),
+  light: () => C.theme(),
+};
+const VISIBLE = ['help', 'ls', 'cd', 'cat', 'open', 'contact', 'fastfetch', 'man', 'git', 'htop', 'history', 'clear', 'whoami', 'uname', 'date', 'uptime', 'echo', 'pwd', 'exit'];
+
+function levenshtein(a, b) {
+  const dp = Array.from({ length: a.length + 1 }, (_, i) => [i, ...Array(b.length).fill(0)]);
+  for (let j = 1; j <= b.length; j++) dp[0][j] = j;
+  for (let i = 1; i <= a.length; i++)
+    for (let j = 1; j <= b.length; j++)
+      dp[i][j] = Math.min(dp[i - 1][j] + 1, dp[i][j - 1] + 1, dp[i - 1][j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+  return dp[a.length][b.length];
+}
+function notFound(cmd) {
+  printText(`jsh: ${cmd}: command not found`, 'err');
+  const best = VISIBLE.map(c => [c, levenshtein(cmd.toLowerCase(), c)]).sort((x, y) => x[1] - y[1])[0];
+  if (best && best[1] <= 2) print(`<span class="dim">Did you mean </span>${link(best[0], best[0])}<span class="dim">?</span>`);
+}
+
+function vimInput(line) {
+  const t = line.trim();
+  const c = t.startsWith(':') ? t : ':' + t;
+  if ([':q', ':q!', ':wq', ':wq!', ':x', ':qa', ':qa!'].includes(c) || t === 'ZZ') {
+    mode = 'sh';
+    printText('You escaped vim. Few do.');
+    return;
+  }
+  if (c === ':help') { printText('Type :q to quit. That is the whole tutorial.'); return; }
+  printText(`E492: Not an editor command: ${c.slice(1)}`, 'err');
+}
+
+async function dispatch(line) {
+  if (mode === 'vim') return vimInput(line);
+  const l = line.toLowerCase().replace(/\s+/g, ' ').trim();
+  const SPECIAL = {
+    'sudo rm -rf /': fakeWipe,
+    'sudo rm -rf / --no-preserve-root': fakeWipe,
+    'sudo rm -rf --no-preserve-root /': fakeWipe,
+    'rm -rf / --no-preserve-root': fakeWipe,
+    'rm -rf --no-preserve-root /': fakeWipe,
+    'rm -rf /': () => { printText("rm: it is dangerous to operate recursively on '/'", 'err'); printText('rm: use --no-preserve-root to override this failsafe', 'err'); },
+    'sudo make me a sandwich': () => printText('Okay.'),
+    'make me a sandwich': () => printText('What? Make it yourself.'),
+    'i use arch btw': () => C.btw(),
+    'sudo pacman -syu': pacmanUpgrade,
+  };
+  if (SPECIAL[l]) return SPECIAL[l]();
+  const tokens = line.trim().split(/\s+/);
+  const cmd = tokens[0], args = tokens.slice(1);
+  const fn = Object.prototype.hasOwnProperty.call(C, cmd) ? C[cmd] : (Object.prototype.hasOwnProperty.call(C, cmd.toLowerCase()) ? C[cmd.toLowerCase()] : null);
+  if (fn) return fn(args, line);
+  notFound(cmd);
+}
+
+async function execute(raw) {
+  if (busy) return;
+  busy = true;
+  const vimColon = mode === 'vim' && raw.trim().startsWith(':');
+  cmdLine.hidden = true;
+  input.value = '';
+  print((vimColon ? '' : promptHTML()) + `<span class="echo">${esc(raw)}</span>`);
+  const line = raw.trim();
+  if (line) hist.push(line);
+  hIdx = hist.length;
+  try { if (line) await dispatch(line); }
+  catch (err) { printText(`jsh: ${err.message}`, 'err'); console.error(err); }
+  if (cancel && cancelReason === 'ctrlc') print('<span class="dim">^C</span>');
+  cancel = false; cancelReason = ''; anyKeyCancels = false; busy = false;
+  if (!introRunning) showInput();
+}
+
+async function submitTyped(cmd) {
+  if (introRunning) { queued = cmd; skipIntro(); return; }
+  if (busy) return;
+  busy = true;
+  cmdLine.hidden = false;
+  input.value = '';
+  if (RM) input.value = cmd;
+  else for (const ch of cmd) { input.value += ch; await wait(16); }
+  await wait(RM ? 0 : 90);
+  busy = false;
+  await execute(input.value);
+}
+
+function cancelRun(reason) {
+  cancel = true; cancelReason = reason;
+  flush();
+  if (overlayOpen) closeOverlay();
+}
+function skipIntro() { skip = true; flush(); }
+
+/* ---------------- Completion ---------------- */
+function commonPrefix(arr) {
+  if (!arr.length) return '';
+  let p = arr[0];
+  for (const s of arr) while (!s.startsWith(p)) p = p.slice(0, -1);
+  return p;
+}
+function complete() {
+  const v = input.value;
+  const parts = v.split(' ');
+  let cands, last = parts[parts.length - 1], replaceWith;
+  if (parts.length === 1) {
+    cands = VISIBLE.filter(c => c.startsWith(last));
+    replaceWith = c => c + ' ';
+  } else {
+    const slash = last.lastIndexOf('/');
+    const dirPart = slash >= 0 ? last.slice(0, slash + 1) : '';
+    const pre = last.slice(slash + 1);
+    const r = resolve(dirPart || '.');
+    if (!r || r.node.type !== 'dir') return;
+    cands = Object.keys(r.node.children)
+      .filter(n => n.startsWith(pre) && (pre.startsWith('.') || !r.node.children[n].hidden))
+      .map(n => n + (r.node.children[n].type === 'dir' ? '/' : ''));
+    replaceWith = c => dirPart + c + (c.endsWith('/') ? '' : ' ');
+    last = pre;
+  }
+  if (!cands.length) return;
+  const head = parts.slice(0, -1).join(' ') + (parts.length > 1 ? ' ' : '');
+  if (cands.length === 1) { input.value = head + replaceWith(cands[0]); return; }
+  const cp = commonPrefix(cands);
+  if (cp.length > last.length) {
+    const dp = parts.length > 1 ? parts[parts.length - 1].slice(0, parts[parts.length - 1].lastIndexOf('/') + 1) : '';
+    input.value = head + dp + cp;
+    return;
+  }
+  print(promptHTML() + `<span class="echo">${esc(v)}</span>`);
+  printText(cands.join('  '));
+  scroll(true);
+}
+
+/* ---------------- Intro ---------------- */
+const BOOT = [
+  ['ok', 'Reached target Local File Systems.'],
+  ['ok', 'Started Network Configuration.'],
+  ['ok', 'Started WireGuard tunnel to netwatch.'],
+  ['ok', 'Mounted /home/guest/projects.'],
+  ['start', 'Starting Kafka broker (evaluation events)...'],
+  ['ok', 'Started Kafka broker (evaluation events).'],
+  ['ok', 'Started vLLM inference server.'],
+  ['ok', 'Started Caddy web server.'],
+  ['ok', 'Reached target Multi-User System.'],
+  ['ok', 'Started Getty on tty1.'],
+];
+const okLine = t => `<span class="okb">[  <span class="ok">OK</span>  ]</span> ${esc(t)}`;
+const fmtLogin = d => d.toLocaleString('en-US', { timeZone: 'Europe/Helsinki', weekday: 'short', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false });
+
+async function intro({ boot = true, auto = true } = {}) {
+  introRunning = true; busy = true; skip = false;
+  cmdLine.hidden = true;
+  statusMid.textContent = 'press any key to skip';
+  const last = store.get('jaalip.lastLogin');
+  if (boot) {
+    for (const [k, t] of BOOT) {
+      print(k === 'ok' ? okLine(t) : `<span class="dim">         ${esc(t)}</span>`);
+      await sleep(rand(40, 140));
+    }
+    await sleep(350);
+    print();
+  }
+  print('Arch Linux 6.11.2-arch1-1 (tty1)');
+  print();
+  const l = print(`${CONFIG.host} login: <span class="typed echo"></span>`);
+  await typeInto(l.querySelector('.typed'), CONFIG.user, { min: 70, max: 140 });
+  await sleep(250);
+  print('Password: <span class="dim">(automatic login for guests)</span>');
+  await sleep(300);
+  print(last ? `Last login: ${esc(fmtLogin(new Date(last)))} on tty1` : `Last login: never. Welcome, ${CONFIG.user}.`);
+  print();
+  if (auto) {
+    await typeCmd('fastfetch');
+    print(fetchHTML(), 'block');
+    await sleep(450);
+    await typeCmd('git log --oneline -5');
+    printLog();
+    await sleep(450);
+    await typeCmd('ls ~');
+    printLs(FS, [], false);
+    await sleep(200);
+  }
+  print();
+  print(hintHTML());
+  store.set('jaalip.lastLogin', new Date().toISOString());
+  introRunning = false; skip = false; busy = false;
+  showInput();
+  if (queued) { const q = queued; queued = null; submitTyped(q); }
+}
+
+/* ---------------- Input wiring ---------------- */
+input.addEventListener('keydown', e => {
+  if (e.key === 'Enter') { e.preventDefault(); execute(input.value); }
+  else if (e.key === 'ArrowUp') {
+    e.preventDefault();
+    if (hist.length) { hIdx = Math.max(0, hIdx - 1); input.value = hist[hIdx] || ''; }
+  }
+  else if (e.key === 'ArrowDown') {
+    e.preventDefault();
+    hIdx = Math.min(hist.length, hIdx + 1); input.value = hist[hIdx] || '';
+  }
+  else if (e.key === 'Tab') { e.preventDefault(); complete(); }
+  else if (e.ctrlKey && e.key.toLowerCase() === 'l') { e.preventDefault(); out.innerHTML = ''; }
+  else if (e.ctrlKey && e.key.toLowerCase() === 'c' && !String(getSelection())) {
+    e.preventDefault();
+    print(promptHTML() + `<span class="echo">${esc(input.value)}</span><span class="dim">^C</span>`);
+    input.value = '';
+    scroll(true);
+  }
+});
+
+const KONAMI = ['ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ArrowLeft', 'ArrowRight', 'b', 'a'];
+let kIdx = 0;
+function konami(key) {
+  const k = key.length === 1 ? key.toLowerCase() : key;
+  kIdx = k === KONAMI[kIdx] ? kIdx + 1 : (k === KONAMI[0] ? 1 : 0);
+  if (kIdx === KONAMI.length) {
+    kIdx = 0;
+    document.body.classList.remove('aurora');
+    void document.body.offsetWidth;
+    document.body.classList.add('aurora');
+    setTimeout(() => document.body.classList.remove('aurora'), 7200);
+    print('<span class="ref">Revontulet unlocked.</span> <span class="dim">The northern lights pass over the terminal.</span>');
+  }
+}
+
+document.addEventListener('keydown', e => {
+  konami(e.key);
+  if (introRunning) {
+    if (!['Shift', 'Control', 'Alt', 'Meta', 'CapsLock'].includes(e.key)) skipIntro();
+    return;
+  }
+  if (overlayOpen && ['q', 'Q', 'Escape', 'F10'].includes(e.key)) { e.preventDefault(); closeOverlay(); return; }
+  if (busy && (e.key === 'Escape' || (e.ctrlKey && e.key.toLowerCase() === 'c'))) { e.preventDefault(); cancelRun('ctrlc'); return; }
+  if (busy && anyKeyCancels) { cancelRun('soft'); return; }
+  if (!busy && document.activeElement !== input && e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey) input.focus({ preventScroll: true });
+});
+
+/* Tap or click on the terminal focuses the prompt, but not after a scroll or a text selection */
+let down = null;
+term.addEventListener('pointerdown', e => {
+  down = { x: e.clientX, y: e.clientY };
+  if (introRunning && !e.target.closest('a')) skipIntro();
+});
+term.addEventListener('pointerup', e => {
+  if (!down) return;
+  const moved = Math.hypot(e.clientX - down.x, e.clientY - down.y) > 10;
+  down = null;
+  if (moved || busy || e.target.closest('a,button') || String(getSelection())) return;
+  input.focus({ preventScroll: true });
+});
+out.addEventListener('click', e => {
+  const a = e.target.closest('a[data-cmd]');
+  if (!a) return;
+  e.preventDefault();
+  submitTyped(a.dataset.cmd);
+});
+$('#dock').addEventListener('click', e => {
+  const b = e.target.closest('button[data-cmd]');
+  if (b) submitTyped(b.dataset.cmd);
+});
+
+/* Status line clock, Helsinki time */
+function tick() {
+  const now = new Date();
+  const t = now.toLocaleTimeString('en-GB', { timeZone: 'Europe/Helsinki', hour: '2-digit', minute: '2-digit' });
+  const d = now.toLocaleDateString('en-GB', { timeZone: 'Europe/Helsinki', weekday: 'short', day: '2-digit', month: 'short' });
+  clock.textContent = `${t}  ${d}`;
+}
+tick();
+setInterval(tick, 15000);
+
+/* Returning visitors skip the boot log but still get the fetch card */
+intro({ boot: !store.get('jaalip.lastLogin'), auto: true });
+})();
+</script>
+</body>
+</html>

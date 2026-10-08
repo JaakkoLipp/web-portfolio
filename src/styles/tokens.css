@@ -1,0 +1,114 @@
+/*
+  Palette: Rosé Pine, main variant. https://rosepinetheme.com/palette/
+  The site is dark only. To try the moon variant, swap the --rp-* primitives:
+  base #232136, surface #2a273f, overlay #393552, rose #ea9a97, pine #3e8fb0,
+  highlight low #2a283e, med #44415a, high #56526e.
+*/
+@font-face {
+  font-family: 'JL Logo';
+  font-style: normal;
+  font-weight: 400;
+  font-display: block;
+  /* JetBrains Mono (OFL 1.1), subset to space, block and box-drawing glyphs. See docs/fonts.md. */
+  src: url('../assets/fonts/jetbrains-mono-logo.woff2') format('woff2');
+}
+
+:root {
+  --rp-base: #191724;
+  --rp-surface: #1f1d2e;
+  --rp-overlay: #26233a;
+  --rp-muted: #6e6a86;
+  --rp-subtle: #908caa;
+  --rp-text: #e0def4;
+  --rp-love: #eb6f92;
+  --rp-gold: #f6c177;
+  --rp-rose: #ebbcba;
+  --rp-pine: #31748f;
+  --rp-foam: #9ccfd8;
+  --rp-iris: #c4a7e7;
+  --rp-hl-low: #21202e;
+  --rp-hl-med: #403d52;
+  --rp-hl-high: #524f67;
+
+  /* Roles. Every text role passes WCAG AA on --bg. Pine and muted are decoration only. */
+  --bg: var(--rp-base);
+  --bg-2: var(--rp-surface);
+  --bg-3: var(--rp-overlay);
+  --fg: var(--rp-text);
+  --dim: var(--rp-subtle);
+  --faint: var(--rp-muted);
+  --accent: var(--rp-foam);
+  --rose: var(--rp-rose);
+  --iris: var(--rp-iris);
+  --gold: var(--rp-gold);
+  --love: var(--rp-love);
+  --pine: var(--rp-pine);
+  --hl-low: var(--rp-hl-low);
+  --hl-med: var(--rp-hl-med);
+  --hl-high: var(--rp-hl-high);
+
+  --mono: 'Martian Mono Variable', ui-monospace, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace;
+  --logo: 'JL Logo', 'JetBrains Mono', ui-monospace, Menlo, Consolas, monospace;
+
+  color-scheme: dark;
+}
+
+/* Dark only. Tokens repeat so a viewer theme switch never flips the page. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) { --bg: var(--rp-base); --fg: var(--rp-text); }
+}
+:root[data-theme='dark'] { --bg: var(--rp-base); --fg: var(--rp-text); }
+
+@media (prefers-contrast: more) {
+  :root { --dim: var(--rp-text); --faint: var(--rp-subtle); }
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+[hidden] { display: none !important; }
+
+html { background: var(--bg); }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--mono);
+  font-variation-settings: 'wdth' 87.5;
+  font-weight: 400;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+::selection { background: var(--hl-med); color: var(--fg); }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 3px; }
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.skip-link {
+  position: absolute;
+  left: 1rem;
+  top: -3rem;
+  z-index: 100;
+  padding: 0.4rem 0.8rem;
+  background: var(--bg-3);
+  color: var(--fg);
+  border: 1px solid var(--accent);
+  border-radius: 6px;
+}
+.skip-link:focus { top: 1rem; }
+
+/* Shared by the terminal and the pages */
+.dim { color: var(--dim); }
+.exe { color: var(--iris); font-weight: 650; }
+.st-active { color: var(--accent); }
+.st-done { color: var(--iris); }
+.st-planned { color: var(--gold); }
+.st-paused { color: var(--dim); }
+@keyframes blink { 50% { opacity: 0; } }

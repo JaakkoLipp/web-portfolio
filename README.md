@@ -1,157 +1,86 @@
+# jaalip.com
 
-# Portfolio (Astro + Tailwind v4 + Markdown Blog)
+Personal site of Jaakko Lipponen. The homepage is a terminal: it boots like a Proxmox host, logs you in as `guest`, and runs a few commands for you. Every other page is plain HTML.
 
-Developer portfolio + Markdown blog inspired by www.conordewey.com.  
-Static-first Astro site, self-host friendly, with light/dark theme support and content collections for posts.
+![The terminal homepage](./preview.png)
 
-![Preview of the Astro + Tailwind portfolio site](./preview.png)
+- Astro 7, static output. No server code.
+- One vanilla JS island for the terminal. Other pages ship no JavaScript.
+- Rosé Pine (main) palette, Martian Mono, self-hosted fonts.
+- Site info in one config file. Projects and posts in Markdown.
 
-## Features
+## Run it
 
-- Astro static site (fast, minimal JS)
-- Tailwind CSS v4 (CSS-first config)
-- Markdown blog via `src/content/posts/*`
-- `/` landing page with recent posts
-- `/blog` list page + `/blog/[slug]` post pages
-- `/about` page
-- Theme toggle (defaults to system; persists user choice)
-- SVG social icons (inline via `?raw`), brand-color hover support
-- Self-hostable output (`dist/`)
-
-## Tech Stack
-
-- Astro
-- Tailwind CSS v4
-- `@tailwindcss/typography` for blog typography
-- Astro Content Collections
-
-## Project Structure
-
-```txt
-src/
-  components/
-    HomeHero.astro
-    SiteHeader.astro
-    SiteFooter.astro
-    ThemeToggle.astro
-    PostListItem.astro
-  content/
-    posts/
-      *.md
-  layouts/
-    BaseLayout.astro
-  pages/
-    index.astro
-    about.astro
-    blog/
-      index.astro
-      [slug].astro
-  styles/
-    global.css
-  assets/
-    avatar.jpg
-    icons/
-      *.svg
+```bash
+nvm use            # Node 24, from .nvmrc (22.12 or newer works)
+npm install
+npm run dev        # http://localhost:4321
+npm run build      # static site in dist/
+npm run check      # astro check + homepage size budget (run after build)
+npm run preview    # serve dist/
 ```
 
+## Update the site
 
-## Content: Writing Posts
+| To change | Edit |
+| --- | --- |
+| Name, role, time zone, links, man page, fortunes | `src/site.config.ts` |
+| The machine (host, OS, kernel, GPU) and the services in the boot log, `htop` and `docker ps` | `src/site.config.ts` |
+| Pages (also the folders in `ls ~`, the terminal's menu) and their command aliases | `pages` in `src/site.config.ts` |
+| A simple page's text (paper, keymap) | `src/content/pages/<id>.md` |
+| Projects | `src/content/projects/<id>.md` |
+| Posts | `src/content/writing/<id>.md` |
+| Colors | `src/styles/tokens.css` |
+| Easter eggs | `src/scripts/terminal/eggs.js` |
 
-Create a new Markdown file in:
+### Add a simple page
 
-`src/content/posts/my-post.md`
+Add `{ id, path, title, blurb }` to `pages` in `src/site.config.ts`, then create `src/content/pages/<id>.md`. The page gets a route, a folder in `ls ~` and a command with its name. The build fails with a clear message if the Markdown file is missing.
 
-Frontmatter example:
+### Add a project
+
+Create `src/content/projects/<id>.md`. The file name becomes the URL (`/projects/<id>`) and the program name in the terminal (`~/projects/<id>`).
 
 ```md
 ---
-title: "My Post Title"
-date: "2026-01-09"
-tag: "DevOps"
-icon: "📝"
-excerpt: "Short summary shown on the landing page."
+title: Homelab
+summary: One line, shown in lists, in the terminal and in git log.
+date: 2026-01-02        # optional. Dated entries show up in git log.
+status: active          # optional: active, done, planned, paused
+context: Personal infrastructure
+stack: [Proxmox, vLLM]
+links:
+  - label: Source
+    url: https://github.com/you/repo
 ---
 
-Post content here...
+The full write-up in Markdown.
 ```
 
-## Development
+Then try `homelab`, `homelab --help` and `ls -l ~/projects` in the terminal.
 
-Install dependencies:
+### Add a post
 
-```bash
-npm install
-```
+Create `src/content/writing/<id>.md` with `title`, `description` and `date`. Set `draft: true` to keep it out of production builds.
 
-Run dev server:
+## Deploy
 
-```bash
-npm run dev
-```
+Pushing to `main` runs `.github/workflows/deploy.yml`: build, check, rsync `dist/` to a new release folder on the VPS, switch the `/var/www/portfolio/current` symlink, then fetch `https://jaalip.com/version.txt` to prove the new release is live. You can also run it by hand from the Actions tab.
 
-Build:
+It needs these repository secrets: `VPS_HOST`, `VPS_PORT`, `VPS_USER`, `VPS_SSH_KEY`.
 
-```bash
-npm run build
-```
+Pull requests run `.github/workflows/ci.yml` (build and checks only).
 
-Preview build locally:
+See `docs/deploy.md` for rollback, the web server setup and a known routing issue.
 
-```bash
-npm run preview
-```
+## Project docs
 
-## Tailwind v4 Notes
-
-This project uses Tailwind v4 CSS-first setup.
-
-Typography plugin is enabled in `src/styles/global.css`:
-
-```css
-@import "tailwindcss";
-@plugin "@tailwindcss/typography";
-@config "../../tailwind.config.cjs";
-```
-
-## Theme (Dark/Light)
-
-- Defaults to system preference (fallback: dark)
-- User selection persists in `localStorage`
-- Implementation toggles a `.light` class on `<html>` (dark is default)
-
-If you change the theme model, update:
-
-- `src/styles/global.css` (tokens + `.light` overrides)
-- `src/components/ThemeToggle.astro` (toggle logic)
-- `src/layouts/BaseLayout.astro` (early theme init script)
-
-## Social Icons (SVG)
-
-Place icons in:
-
-`src/assets/icons/*.svg`
-
-Requirements:
-
-- Use `fill="currentColor"` / `stroke="currentColor"` so icons inherit link color
-- Imported as raw strings and inlined with `set:html`
-
-Example import:
-
-```astro
-import githubIcon from "../assets/icons/github.svg?raw";
-```
-
-## Deployment / Self-Hosting
-
-This is a static site. Deploy the `dist/` folder behind any web server.
-
-Example (Nginx):
-
-- Build with `npm run build`
-- Serve `dist/` as the web root
-- Configure SPA-like routing is NOT needed (Astro generates real HTML routes)
-
-## Credits / Inspiration
-
-Design inspiration: www.conordewey.com
+| Path | Purpose |
+| --- | --- |
+| `CLAUDE.md` | Project rules that Claude Code loads in every session |
+| `.claude/skills/rebuild/` | The `/rebuild` interview, plan and build workflow |
+| `docs/design-defaults.md` | Every design default in plain text |
+| `docs/decisions/` | Dated decision records |
+| `docs/reference/jaalip-tty.html` | The original prototype the terminal was ported from |
+| `docs/deploy.md` | Deploy pipeline, rollback and web server setup |
+| `docs/fonts.md` | How the fonts are built |

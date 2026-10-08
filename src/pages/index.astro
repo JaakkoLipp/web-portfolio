@@ -1,29 +1,81 @@
 ---
-import BaseLayout from "../layouts/BaseLayout.astro";
-import HomeHero from "../components/HomeHero.astro";
-import PostListItem from "../components/PostListItem.astro";
-import { getAllPosts } from "../lib/posts";
-const posts = (await getAllPosts()).slice(0, 3);
+import Base from '../layouts/Base.astro';
+import '../styles/terminal.css';
+import { site } from '../site.config';
+import { getTerminalData, toScriptJson } from '../lib/terminal-data';
+import { SHELL } from '../lib/site';
+
+const data = await getTerminalData();
+const { owner, links, pages } = site;
 ---
 
-<BaseLayout title="Jaakko Lipponen">
-  <div class="pb-10">
-    <HomeHero />
+<Base title={`${owner.name}, ${owner.role}`} bodyClass="tty">
+  <noscript slot="head"><style>#app { display: none; } body.tty { overflow: auto; }</style></noscript>
 
-    <section class="mt-14">
-      <h2 class="text-xs font-semibold tracking-[0.22em] text-muted">
-        RECENT POSTS
-      </h2>
-
-      <div class="mt-6 space-y-10">
-        {posts.map((p) => <PostListItem post={p} />)}
-      </div>
-
-      <div class="mt-10">
-        <a href="/blog" class="text-sm link">
-          Read more posts →
-        </a>
-      </div>
-    </section>
+  <div class="sr-only">
+    <h1>{owner.name}, {owner.role}</h1>
+    <p>{owner.focus}. {owner.location}.</p>
+    <nav aria-label="Pages">
+      <ul>
+        {pages.map((p) => <li><a href={p.path}>{p.title}</a></li>)}
+        {links.map((l) => <li><a href={l.url} rel="me noopener">{l.label}</a></li>)}
+      </ul>
+    </nav>
   </div>
-</BaseLayout>
+
+  <noscript>
+    <div class="nojs">
+      <h1>{owner.name}</h1>
+      <p>{owner.role}. {owner.focus}. {owner.location}.</p>
+      <p>The homepage is a terminal and needs JavaScript. Everything else works without it:</p>
+      <ul>
+        {pages.map((p) => <li><a href={p.path}>{p.title}</a>: {p.blurb}</li>)}
+      </ul>
+      <p>{links.map((l, i) => <>{i > 0 && ' · '}<a href={l.url} rel="me noopener">{l.label}</a></>)}</p>
+    </div>
+  </noscript>
+
+  <div id="app">
+    <main id="term" aria-label="Terminal">
+      <div id="screen">
+        <div id="out" role="log" aria-live="off"></div>
+        <div id="cmdLine" hidden>
+          <span id="prompt"></span><input
+            id="cmd"
+            type="text"
+            aria-label="Command"
+            autocomplete="off"
+            autocapitalize="off"
+            autocorrect="off"
+            spellcheck="false"
+            enterkeyhint="go"
+          />
+        </div>
+      </div>
+    </main>
+
+    <div id="bottom">
+      <div id="status">
+        <span><span class="win">0:{SHELL}*</span>[{site.brand}]</span>
+        <span id="statusMid"></span>
+        <span id="clock"></span>
+      </div>
+    </div>
+  </div>
+
+  <div id="overlay" role="dialog" aria-label="htop process viewer" hidden>
+    <div id="ovBody"></div>
+    <div id="ovKeys">
+      <span class="fk">F1</span><span class="fl">Help</span>
+      <span class="fk">F3</span><span class="fl">Search</span>
+      <span class="fk">F6</span><span class="fl">SortBy</span>
+      <span class="fk">F9</span><span class="fl">Kill</span>
+      <button id="ovQuit" type="button" aria-label="Quit htop"><span class="fk">F10</span><span class="fl">Quit</span></button>
+    </div>
+  </div>
+
+  <script is:inline type="application/json" id="term-data" set:html={toScriptJson(data)} />
+  <script>
+    import '../scripts/terminal/main.js';
+  </script>
+</Base>

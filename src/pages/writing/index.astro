@@ -1,0 +1,25 @@
+---
+import Page from '../../layouts/Page.astro';
+import { getPosts, fmtDate, postPath } from '../../lib/content';
+import { page } from '../../lib/site';
+
+const info = page('writing');
+const posts = await getPosts();
+---
+
+<Page title={info.title} description={info.blurb} path={`~/${info.id}`}>
+  <h1>{info.title}</h1>
+  <p class="lead">{info.blurb}</p>
+  {posts.length === 0 && <p class="dim">Nothing here yet.</p>}
+  <ul class="entries">
+    {posts.map((p) => (
+      <li>
+        <div class="entry-head">
+          <span class="entry-title"><a href={postPath(p.id)}>{p.data.title}</a></span>
+          <time class="entry-meta" datetime={fmtDate(p.data.date)}>{fmtDate(p.data.date)}</time>
+        </div>
+        <p class="entry-summary">{p.data.description}</p>
+      </li>
+    ))}
+  </ul>
+</Page>
