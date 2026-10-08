@@ -60,7 +60,6 @@ li::marker { color: var(--rose); }
 strong { color: var(--fg); font-weight: 650; }
 hr { border: 0; border-top: 1px dashed var(--hl-med); margin: 2rem 0; }
 .lead { color: var(--dim); margin-bottom: 1.8rem; }
-.dim { color: var(--dim); }
 
 code {
   font-family: inherit;
@@ -95,7 +94,6 @@ blockquote { margin: 0 0 1rem; padding-left: 2ch; border-left: 2px solid var(--i
 .entry-title { font-weight: 650; }
 .entry-title a { color: var(--fg); text-decoration: none; }
 .entry-title a:hover { color: var(--accent); }
-.exe { color: var(--iris); }
 .entry-meta { color: var(--dim); font-size: 0.9em; }
 .entry-summary { margin: 0.3rem 0 0; color: var(--dim); }
 
@@ -108,10 +106,6 @@ blockquote { margin: 0 0 1rem; padding-left: 2ch; border-left: 2px solid var(--i
 .tags { display: flex; flex-wrap: wrap; gap: 0.4rem; list-style: none; padding: 0; margin: 0; }
 .tags li { margin: 0; padding: 0 0.7ch; border: 1px solid var(--hl-med); border-radius: 5px; color: var(--dim); font-size: 0.88em; }
 
-.status-active { color: var(--accent); }
-.status-done { color: var(--iris); }
-.status-planned { color: var(--gold); }
-.status-paused { color: var(--dim); }
 
 .site-footer {
   padding-top: 1.2rem;
@@ -124,4 +118,3 @@ blockquote { margin: 0 0 1rem; padding-left: 2ch; border-left: 2px solid var(--i
 @media (prefers-reduced-motion: no-preference) {
   .brand-cur { animation: blink 1.06s steps(1) infinite; }
 }
-@keyframes blink { 50% { opacity: 0; } }

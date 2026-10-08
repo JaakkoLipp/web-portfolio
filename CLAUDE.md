@@ -1,7 +1,7 @@
 # jaalip.com
 
 Personal portfolio and blog for Jaakko, AI specialist and consultant in Helsinki.
-The homepage is an Arch Linux TTY-style terminal: an auto-typed intro, then an interactive CLI with easter eggs.
+The homepage is a Proxmox-style TTY terminal: a brief boot, an auto-typed intro, then an interactive CLI with easter eggs.
 
 ## Source of truth
 
@@ -11,12 +11,20 @@ The homepage is an Arch Linux TTY-style terminal: an auto-typed intro, then an i
 
 ## Where things live
 
-- `src/site.config.ts`: owner info, links, machine and OS, services, boot log, man page, routes. Edit this to update site information.
+- `src/site.config.ts`: owner info and time zone, brand, links, pages (with aliases and folder files), machine and OS, services, readme, man page, fortunes. Edit this to update site information.
 - `src/content/projects/*.md`: one file per project. Each one becomes a page and an executable in the terminal.
 - `src/content/writing/*.md`: blog posts.
-- `src/lib/terminal-data.ts`: turns config and content into the JSON the terminal reads.
-- `src/scripts/terminal/`: the terminal island (vanilla JS). Easter egg jokes live here, next to their behavior.
-- `src/styles/tokens.css`: the palette (Rosé Pine main) and type tokens.
+- `src/content/pages/*.md`: simple pages such as paper and keymap. The file name must match a page id in the config.
+- `src/lib/`: build helpers. `site.ts` (values derived from the config), `content.ts` (collections, URLs, git log), `terminal-data.ts` (the JSON the terminal reads), `format.ts` (helpers shared with the terminal).
+- `src/scripts/terminal/`: the terminal island (vanilla JS), one job per module:
+  - `state.js`: shared state, values derived from the config, output helpers.
+  - `commands.js`: core shell commands, dispatch and tab completion.
+  - `system.js`: the simulated machine (apt, nvidia-smi, docker, systemctl, ping), driven by `machine` and `services`.
+  - `eggs.js`: easter eggs. Add a new joke here and nowhere else.
+  - `content.js`: fetch card, git log, help, man page, projects as programs, `open`.
+  - `fs.js`: the virtual file system, `ls` and `cat`.
+  - `intro.js` (boot and login), `htop.js` (the overlay), `main.js` (input and key bindings).
+- `src/styles/tokens.css`: the palette (Rosé Pine main), type tokens and classes shared by both stylesheets.
 
 ## Interview before you build
 

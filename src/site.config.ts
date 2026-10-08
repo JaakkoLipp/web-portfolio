@@ -10,6 +10,10 @@ export interface Page {
   path: string;
   title: string;
   blurb: string;
+  /* The file inside the page's folder in the terminal. Defaults to README.md. */
+  file?: string;
+  /* Extra command names that open the page, for example `blog` for writing. */
+  aliases?: string[];
   /* Optional launch date (YYYY-MM-DD). Pages with a date show up in `git log`. */
   date?: string;
 }
@@ -29,8 +33,10 @@ export interface ManOption { flag: string; text: string; see?: { label: string; 
 export interface SiteConfig {
   domain: string;
   url: string;
+  /* Short name: the logo wordmark, the tmux session name and the page header. */
+  brand: string;
   description: string;
-  owner: { name: string; short: string; role: string; focus: string; stack: string; location: string; langs: string };
+  owner: { name: string; short: string; role: string; focus: string; stack: string; location: string; langs: string; timeZone: string };
   links: Link[];
   pages: Page[];
   machine: {
@@ -54,6 +60,7 @@ export interface SiteConfig {
 export const site: SiteConfig = {
   domain: 'jaalip.com',
   url: 'https://jaalip.com',
+  brand: 'jaalip',
   description: 'Jaakko Lipponen, AI specialist and consultant in Helsinki. Self-hosted, GDPR-compliant LLM platforms.',
 
   owner: {
@@ -64,6 +71,8 @@ export const site: SiteConfig = {
     stack: 'Kafka, Azure, Python, Proxmox, vLLM, observability',
     location: 'Helsinki, FI (from Turku)',
     langs: 'fi, en',
+    /* Clock, `date`, `uptime`, file dates and last login use this time zone. */
+    timeZone: 'Europe/Helsinki',
   },
 
   /* Contact: shown by `contact`, `cat contact.txt`, the footer and the noscript fallback. */
@@ -72,12 +81,15 @@ export const site: SiteConfig = {
     { id: 'linkedin', label: 'LinkedIn', url: 'https://www.linkedin.com/in/jaakko-lipponen/' },
   ],
 
-  /* Pages outside the terminal. Each one is also a folder in `ls ~`, which works as the site menu. */
+  /*
+    Pages outside the terminal. Each one is also a folder in `ls ~`, which works as the site menu.
+    projects and writing have their own routes. Any other page needs src/content/pages/<id>.md.
+  */
   pages: [
     { id: 'projects', path: '/projects', title: 'Projects', blurb: 'Things I build and run. Each one is also an executable in the terminal.' },
-    { id: 'paper', path: '/paper', title: 'Daily AI newspaper', blurb: 'A daily HTML newspaper, written by a local LLM pipeline.' },
-    { id: 'keymap', path: '/keymap', title: 'Sofle keymap', blurb: 'Quick reference for the layers on my Sofle split keyboard.' },
-    { id: 'writing', path: '/writing', title: 'Writing', blurb: 'Notes on LLM platforms, infrastructure and the tools around them.' },
+    { id: 'paper', path: '/paper', title: 'Daily AI newspaper', blurb: 'A daily HTML newspaper, written by a local LLM pipeline.', file: 'today.html' },
+    { id: 'keymap', path: '/keymap', title: 'Sofle keymap', blurb: 'Quick reference for the layers on my Sofle split keyboard.', file: 'sofle.md' },
+    { id: 'writing', path: '/writing', title: 'Writing', blurb: 'Notes on LLM platforms, infrastructure and the tools around them.', aliases: ['blog'] },
   ],
 
   /* The machine the terminal pretends to be. `host` is the public VPS that serves this site. */

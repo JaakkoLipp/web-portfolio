@@ -29,7 +29,6 @@ body.tty {
 .scroll-x { overflow-x: auto; scrollbar-width: thin; }
 
 /* Semantic colors */
-.dim { color: var(--dim); }
 .err { color: var(--love); }
 .ok { color: var(--accent); font-weight: 600; }
 .okb { color: var(--fg); }
@@ -39,7 +38,6 @@ body.tty {
 .ref { color: var(--rose); }
 .ty { color: var(--iris); }
 .dir { color: var(--accent); font-weight: 650; }
-.exe { color: var(--iris); font-weight: 650; }
 .hid { color: var(--dim); }
 .echo { color: var(--fg); }
 .pb { color: var(--fg); }
@@ -50,10 +48,6 @@ body.tty {
 .heat { color: var(--gold); }
 .colon { color: var(--accent); font-weight: 700; }
 .h1 { color: var(--fg); font-weight: 650; }
-.st-active { color: var(--accent); }
-.st-done { color: var(--iris); }
-.st-planned { color: var(--gold); }
-.st-paused { color: var(--dim); }
 
 a.lnk {
   color: inherit;
@@ -74,7 +68,6 @@ a.lnk:active { color: var(--rose); }
   margin-left: 1px;
   animation: blink 1.06s steps(1) infinite;
 }
-@keyframes blink { 50% { opacity: 0; } }
 
 /* Fetch card */
 .fetch { display: flex; flex-wrap: wrap; gap: 0.6rem 3ch; margin: 0.35rem 0 0.7rem; align-items: flex-start; }

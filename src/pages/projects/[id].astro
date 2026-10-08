@@ -2,6 +2,8 @@
 import Page from '../../layouts/Page.astro';
 import { render } from 'astro:content';
 import { getProjects, fmtDate, type Project } from '../../lib/content';
+import { page } from '../../lib/site';
+import { shortUrl } from '../../lib/format';
 
 export async function getStaticPaths() {
   const projects = await getProjects();
@@ -19,13 +21,13 @@ const d = entry.data;
   <p class="lead">{d.summary}</p>
   <dl class="meta">
     {d.context && <><dt>context</dt><dd>{d.context}</dd></>}
-    {d.status && <><dt>status</dt><dd class={`status-${d.status}`}>{d.status}</dd></>}
+    {d.status && <><dt>status</dt><dd class={`st-${d.status}`}>{d.status}</dd></>}
     {d.date && <><dt>updated</dt><dd><time datetime={fmtDate(d.date)}>{fmtDate(d.date)}</time></dd></>}
     {d.stack.length > 0 && <><dt>stack</dt><dd><ul class="tags">{d.stack.map((s) => <li>{s}</li>)}</ul></dd></>}
-    {d.links.map((l) => <><dt>{l.label.toLowerCase()}</dt><dd><a href={l.url} rel="noopener">{l.url.replace(/^https?:\/\/(www\.)?/, '')}</a></dd></>)}
+    {d.links.map((l) => <><dt>{l.label.toLowerCase()}</dt><dd><a href={l.url} rel="noopener">{shortUrl(l.url)}</a></dd></>)}
     <dt>run</dt><dd><a href={`/?run=${entry.id}`}><code>{entry.id}</code></a> in the terminal</dd>
   </dl>
   <Content />
   <hr />
-  <p><a href="/projects">All projects</a></p>
+  <p><a href={page('projects').path}>All projects</a></p>
 </Page>

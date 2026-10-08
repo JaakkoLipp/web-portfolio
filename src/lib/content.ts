@@ -1,8 +1,14 @@
 import { getCollection, type CollectionEntry } from 'astro:content';
 import { site } from '../site.config';
+import { shortHash } from './format';
+import { page } from './site';
 
 export type Project = CollectionEntry<'projects'>;
 export type Post = CollectionEntry<'writing'>;
+
+/* URLs for content entries. The folders in src/pages/ must match these page paths. */
+export const projectPath = (id: string) => `${page('projects').path}/${id}`;
+export const postPath = (id: string) => `${page('writing').path}/${id}`;
 
 const published = <T extends { data: { draft: boolean } }>(e: T) => !import.meta.env.PROD || !e.data.draft;
 
@@ -23,16 +29,6 @@ export async function getPosts(): Promise<Post[]> {
   return all.sort((a, b) => b.data.date.getTime() - a.data.date.getTime() || a.id.localeCompare(b.id));
 }
 
-/* Stable 7-character hex "commit hash" for an id (FNV-1a). */
-export function shortHash(input: string): string {
-  let h = 0x811c9dc5;
-  for (let i = 0; i < input.length; i++) {
-    h ^= input.charCodeAt(i);
-    h = Math.imul(h, 0x01000193);
-  }
-  return (h >>> 0).toString(16).padStart(8, '0').slice(0, 7);
-}
-
 export interface LogEntry {
   hash: string;
   type: string;
@@ -46,20 +42,14 @@ export interface LogEntry {
 /* `git log` entries, newest first: dated projects, posts and pages. */
 export async function getLog(): Promise<LogEntry[]> {
   const [projects, posts] = await Promise.all([getProjects(), getPosts()]);
-  const entries: (LogEntry & { t: number })[] = [];
-  for (const p of projects) {
-    if (!p.data.date) continue;
-    entries.push({ hash: shortHash(`projects/${p.id}`), type: `feat(${p.id})`, msg: p.data.log ?? p.data.summary, cmd: p.id, href: `/projects/${p.id}`, date: p.data.date.toISOString(), t: p.data.date.getTime() });
-  }
-  for (const p of posts) {
-    entries.push({ hash: shortHash(`writing/${p.id}`), type: 'docs(writing)', msg: p.data.title, cmd: `open /writing/${p.id}`, href: `/writing/${p.id}`, date: p.data.date.toISOString(), t: p.data.date.getTime() });
-  }
-  for (const p of site.pages) {
-    if (!p.date) continue;
-    const d = new Date(p.date);
-    entries.push({ hash: shortHash(`pages/${p.id}`), type: `feat(${p.id})`, msg: p.title, cmd: `open ${p.id}`, href: p.path, date: d.toISOString(), t: d.getTime() });
-  }
-  return entries.sort((a, b) => b.t - a.t || a.hash.localeCompare(b.hash)).map(({ t: _t, ...e }) => e);
+  const entry = (key: string, type: string, msg: string, cmd: string, href: string, date: Date) =>
+    ({ hash: shortHash(key), type, msg, cmd, href, date: date.toISOString() });
+  const entries: LogEntry[] = [
+    ...projects.flatMap((p) => (p.data.date ? [entry(`projects/${p.id}`, `feat(${p.id})`, p.data.log ?? p.data.summary, p.id, projectPath(p.id), p.data.date)] : [])),
+    ...posts.map((p) => entry(`writing/${p.id}`, 'docs(writing)', p.data.title, `open ${postPath(p.id)}`, postPath(p.id), p.data.date)),
+    ...site.pages.flatMap((p) => (p.date ? [entry(`pages/${p.id}`, `feat(${p.id})`, p.title, `open ${p.id}`, p.path, new Date(p.date))] : [])),
+  ];
+  return entries.sort((a, b) => b.date.localeCompare(a.date) || a.hash.localeCompare(b.hash));
 }
 
 export const fmtDate = (d: Date) => d.toISOString().slice(0, 10);

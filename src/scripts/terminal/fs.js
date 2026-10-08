@@ -1,8 +1,6 @@
 /* Virtual file system under the guest's home, built from site data. */
-import { D, HOME, S, esc, link, print, printText, dim } from './state.js';
-
-/* Default file inside each page folder. */
-const PAGE_FILES = { paper: 'today.html', keymap: 'sofle.md' };
+import { shortUrl } from '../../lib/format';
+import { D, HOME, MAN, S, TZ, dim, esc, link, print, printText, readMore } from './state.js';
 
 function buildFs() {
   const children = {};
@@ -13,13 +11,12 @@ function buildFs() {
     } else if (page.id === 'writing') {
       kids = Object.fromEntries(D.posts.map((p) => [`${p.id}.md`, { type: 'file', post: p, route: p.path, size: p.size, date: p.date }]));
     } else {
-      kids = { [PAGE_FILES[page.id] ?? 'README.md']: { type: 'file', route: page.path, body: `# ${page.title}\n${page.blurb}` } };
+      kids = { [page.file ?? 'README.md']: { type: 'file', route: page.path, body: `# ${page.title}\n${page.blurb}` } };
     }
     children[page.id] = { type: 'dir', route: page.path, cmd: `open ${page.id}`, children: kids };
   }
   /* The man page sits in ~ so the home listing works as the site menu. */
-  const man = D.owner.short.toLowerCase();
-  children[`${man}.1`] = { type: 'file', special: 'man', cmd: `man ${man}`, size: 2048 };
+  children[`${MAN}.1`] = { type: 'file', special: 'man', cmd: `man ${MAN}`, size: 2048 };
   children['contact.txt'] = { type: 'file', special: 'contact', cmd: 'contact' };
   children['README.md'] = { type: 'file', body: D.readme.join('\n') };
   children['.secrets'] = {
@@ -31,7 +28,7 @@ function buildFs() {
 }
 export const FS = buildFs();
 
-export function nodeAt(path) {
+function nodeAt(path) {
   let n = FS;
   for (const s of path) {
     if (n.type !== 'dir' || !n.children[s]) return null;
@@ -57,7 +54,7 @@ export function resolve(p) {
   return node ? { node, path: base } : null;
 }
 
-export const tildePath = (path) => '~/' + path.join('/');
+const tildePath = (path) => '~/' + path.join('/');
 export const findProject = (id) => D.projects.find((p) => p.id === id);
 export const isOutsideHome = (p) => p.startsWith('/') && p !== HOME && !p.startsWith(HOME + '/');
 
@@ -65,7 +62,7 @@ export const isOutsideHome = (p) => p.startsWith('/') && p !== HOME && !p.starts
   One clickable ls entry. Page folders open their page, programs run, files print.
   A node's `cmd` overrides the default, so `ls ~` doubles as the site menu.
 */
-export function lsItem(node, name, path) {
+function lsItem(node, name, path) {
   const full = tildePath([...path, name]);
   if (node.type === 'dir') return link(`<span class="dir">${esc(name)}/</span>`, node.cmd ?? `ls ${full}`, node.route ?? '#');
   if (node.type === 'exe') return link(`<span class="exe">${esc(name)}*</span>`, name, node.project.path);
@@ -74,7 +71,7 @@ export function lsItem(node, name, path) {
 
 function lsDate(iso) {
   const d = iso ? new Date(iso) : new Date(D.builtAt);
-  const part = (o) => d.toLocaleString('en-US', { ...o, timeZone: 'Europe/Helsinki' });
+  const part = (o) => d.toLocaleString('en-US', { ...o, timeZone: TZ });
   const mon = part({ month: 'short' });
   const day = part({ day: 'numeric' }).padStart(2);
   const recent = Date.now() - d.getTime() < 182 * 86400000;
@@ -102,22 +99,19 @@ export function printLs(node, path, all = false, long = false) {
 
 export function contactHTML() {
   const w = Math.max(...D.links.map((l) => l.id.length)) + 2;
-  const short = (u) => u.replace(/^https?:\/\/(www\.)?/, '').replace(/\/$/, '');
   return D.links
-    .map((l) => `<span class="dir">${esc(l.id.padEnd(w))}</span><a class="lnk" href="${esc(l.url)}" target="_blank" rel="noopener me">${esc(short(l.url))}</a>`)
+    .map((l) => `<span class="dir">${esc(l.id.padEnd(w))}</span><a class="lnk" href="${esc(l.url)}" target="_blank" rel="noopener me">${esc(shortUrl(l.url))}</a>`)
     .join('\n');
 }
 
 const heading = (l) => (l.startsWith('# ') ? `<span class="h1">${esc(l)}</span>` : esc(l));
-const readMore = (route) => print(`${dim('Read more: ')}${link(esc('open ' + route), 'open ' + route, route)}`);
 
-export function printFile(r, name) {
+function printFile(r, name) {
   const n = r.node;
   if (n.special === 'contact') { print(contactHTML()); return; }
   if (n.special === 'man') {
-    const man = D.owner.short.toLowerCase();
-    print(dim(`.TH ${man.toUpperCase()} 1\n.SH NAME\n${man} \\- ${D.owner.role}\n.SH SYNOPSIS\n...`));
-    print(`${dim('This is troff source. Read it properly: ')}${link(esc(`man ${man}`), `man ${man}`)}`);
+    print(dim(`.TH ${MAN.toUpperCase()} 1\n.SH NAME\n${MAN} \\- ${D.owner.role}\n.SH SYNOPSIS\n...`));
+    print(`${dim('This is troff source. Read it properly: ')}${link(esc(`man ${MAN}`), `man ${MAN}`)}`);
     return;
   }
   if (n.type === 'exe') {

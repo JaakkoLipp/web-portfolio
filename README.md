@@ -24,12 +24,18 @@ npm run preview    # serve dist/
 
 | To change | Edit |
 | --- | --- |
-| Name, role, links, man page, fortunes | `src/site.config.ts` |
+| Name, role, time zone, links, man page, fortunes | `src/site.config.ts` |
 | The machine (host, OS, kernel, GPU) and the services in the boot log, `htop` and `docker ps` | `src/site.config.ts` |
-| Pages (also the folders in `ls ~`, the terminal's menu) | `pages` in `src/site.config.ts` |
+| Pages (also the folders in `ls ~`, the terminal's menu) and their command aliases | `pages` in `src/site.config.ts` |
+| A simple page's text (paper, keymap) | `src/content/pages/<id>.md` |
 | Projects | `src/content/projects/<id>.md` |
 | Posts | `src/content/writing/<id>.md` |
 | Colors | `src/styles/tokens.css` |
+| Easter eggs | `src/scripts/terminal/eggs.js` |
+
+### Add a simple page
+
+Add `{ id, path, title, blurb }` to `pages` in `src/site.config.ts`, then create `src/content/pages/<id>.md`. The page gets a route, a folder in `ls ~` and a command with its name. The build fails with a clear message if the Markdown file is missing.
 
 ### Add a project
 

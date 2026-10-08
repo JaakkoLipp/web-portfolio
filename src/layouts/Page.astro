@@ -20,7 +20,7 @@ const current = Astro.url.pathname.replace(/\/$/, '');
   <a class="skip-link" href="#main">Skip to content</a>
   <header class="site-header">
     <a class="brand" href="/" aria-label={`${site.domain}, back to the terminal`}>
-      <span aria-hidden="true">{site.domain.split('.')[0]}</span><span class="brand-cur" aria-hidden="true">▌</span>
+      <span aria-hidden="true">{site.brand}</span><span class="brand-cur" aria-hidden="true">▌</span>
     </a>
     <nav aria-label="Pages">
       <ul>

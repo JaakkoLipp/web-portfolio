@@ -11,8 +11,8 @@ When the owner confirms a different answer, update this file and add a record in
 | --- | --- |
 | Framework | Astro 7, static output |
 | Terminal | One vanilla JS island in `src/scripts/terminal/`, ported from the prototype |
-| Content | Astro content collections in Markdown: `src/content/projects/` and `src/content/writing/` |
-| Site config | One typed file, `src/site.config.ts` (owner, links, machine, services, boot log, man page) |
+| Content | Astro content collections in Markdown: `src/content/projects/`, `src/content/writing/` and `src/content/pages/` (simple pages) |
+| Site config | One typed file, `src/site.config.ts` (owner and time zone, brand, links, pages, machine, services, man page) |
 | Styling | Plain CSS. Tokens in `src/styles/tokens.css` |
 | Fonts | Self-hosted. Martian Mono from Fontsource. A JetBrains Mono subset for the logo |
 | Package manager | npm |
@@ -36,8 +36,8 @@ When the owner confirms a different answer, update this file and add a record in
 | `/` | Terminal homepage |
 | `/projects` | All projects, one Markdown entry each |
 | `/projects/<id>` | One project. The thesis lives at `/projects/llm-eval-service` |
-| `/paper` | Daily AI-generated HTML newspaper (placeholder) |
-| `/keymap` | Sofle keyboard keymap quick reference (placeholder) |
+| `/paper` | Daily AI-generated HTML newspaper (placeholder, `src/content/pages/paper.md`) |
+| `/keymap` | Sofle keyboard keymap quick reference (placeholder, `src/content/pages/keymap.md`) |
 | `/writing` | Blog posts |
 | `/writing/<id>` | One post |
 
@@ -88,6 +88,7 @@ To try the moon variant, swap the primitives at the top of `src/styles/tokens.cs
 - Prompt format: `guest@netwatch:~$`.
 - Projects are executables in `~/projects`, which is on `PATH`. `homelab`, `./homelab` and `~/projects/homelab` all run it.
 - `git log` is generated from the dates of projects and posts.
+- Page names and their `aliases` (for example `blog`) work as commands.
 - Services (boot log, `htop`, `docker ps`) come from `services` in `src/site.config.ts`.
 - Shell features: Tab completion, history, Ctrl+C, Ctrl+L, "Did you mean" suggestions.
 - Underlined output runs a command on click.

@@ -41,4 +41,13 @@ const writing = defineCollection({
   }),
 });
 
-export const collections = { projects, writing };
+/*
+  Simple pages, one Markdown file per page in site.config.ts (paper, keymap, ...).
+  The file name is the page id. Title and blurb come from the config.
+*/
+const pages = defineCollection({
+  loader: glob({ pattern: '**/*.md', base: './src/content/pages' }),
+  schema: z.object({}),
+});
+
+export const collections = { projects, writing, pages };

@@ -103,3 +103,12 @@ body {
   border-radius: 6px;
 }
 .skip-link:focus { top: 1rem; }
+
+/* Shared by the terminal and the pages */
+.dim { color: var(--dim); }
+.exe { color: var(--iris); font-weight: 650; }
+.st-active { color: var(--accent); }
+.st-done { color: var(--iris); }
+.st-planned { color: var(--gold); }
+.st-paused { color: var(--dim); }
+@keyframes blink { 50% { opacity: 0; } }

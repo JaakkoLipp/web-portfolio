@@ -1,5 +1,5 @@
 /* Entry point: input handling, execution, key bindings, clock. */
-import { D, RM, S, TOUCH, clear, el, esc, flush, hooks, print, printText, promptHTML, scroll, showInput, wait } from './state.js';
+import { D, RM, S, SH, TOUCH, TZ, clear, el, esc, flush, hooks, print, printText, promptHTML, scroll, showInput, wait } from './state.js';
 import { complete, dispatch } from './commands.js';
 import { intro, isReturning } from './intro.js';
 
@@ -14,7 +14,7 @@ async function execute(raw) {
   if (line) S.hist.push(line);
   S.hIdx = S.hist.length;
   try { if (line) await dispatch(line); }
-  catch (err) { printText(`jsh: ${err.message}`, 'err'); console.error(err); }
+  catch (err) { printText(`${SH}: ${err.message}`, 'err'); console.error(err); }
   if (S.cancel && S.cancelReason === 'ctrlc') print('<span class="dim">^C</span>');
   S.cancel = false; S.cancelReason = ''; S.anyKeyCancels = false; S.busy = false;
   if (!S.introRunning) showInput();
@@ -118,11 +118,11 @@ el.out.addEventListener('click', (e) => {
 });
 el.ovQuit.addEventListener('click', () => S.closeOverlay());
 
-/* Status line clock, Helsinki time. */
+/* Status line clock, in the owner's time zone. */
 function tick() {
   const now = new Date();
-  const t = now.toLocaleTimeString('en-GB', { timeZone: 'Europe/Helsinki', hour: '2-digit', minute: '2-digit' });
-  const d = now.toLocaleDateString('en-GB', { timeZone: 'Europe/Helsinki', weekday: 'short', day: '2-digit', month: 'short' });
+  const t = now.toLocaleTimeString('en-GB', { timeZone: TZ, hour: '2-digit', minute: '2-digit' });
+  const d = now.toLocaleDateString('en-GB', { timeZone: TZ, weekday: 'short', day: '2-digit', month: 'short' });
   el.clock.textContent = `${t}  ${d}`;
 }
 tick();

@@ -1,12 +1,10 @@
 /* Boot, Proxmox console banner, auto login and the auto-typed intro. */
-import { D, RM, S, clear, dim, el, esc, hooks, print, rand, showInput, sleep, store, typeCmd, typeInto, wait } from './state.js';
+import { D, KERNEL_BUILD, RM, S, TZ, clear, dim, el, esc, hooks, print, rand, showInput, sleep, store, typeCmd, typeInto, wait } from './state.js';
 import { fetchHTML, hintHTML, printLog } from './content.js';
 import { FS, printLs } from './fs.js';
 
 const LAST_LOGIN = 'jaalip.lastLogin';
 const m = D.machine;
-/* Proxmox kernels report their version without the -pve suffix after PMX. */
-const pmx = m.kernel.replace(/-pve$/, '');
 
 const ok = (t) => `<span class="okb">[  <span class="ok">OK</span>  ]</span> ${esc(t)}`;
 const starting = (t) => `         ${esc(t)}`;
@@ -62,7 +60,7 @@ async function bootLog() {
   print('Loading initial ramdisk ...');
   await sleep(380);
   const kernel = [
-    ['0.000000', `Linux version ${k} (build@proxmox) #1 SMP PREEMPT_DYNAMIC PMX ${pmx}`],
+    ['0.000000', `Linux version ${k} (build@proxmox) ${KERNEL_BUILD}`],
     ['0.000000', `Command line: BOOT_IMAGE=/boot/vmlinuz-${k} root=/dev/mapper/pve-root ro`],
     ['0.412233', 'Run /init as init process'],
     ['1.873120', 'EXT4-fs (dm-1): mounted filesystem with ordered data mode.'],
@@ -72,8 +70,7 @@ async function bootLog() {
     await sleep(rand(30, 90));
   }
   print();
-  const distro = m.distro;
-  print(`Welcome to <span class="distro">${esc(distro)}</span>!`);
+  print(`Welcome to <span class="distro">${esc(m.distro)}</span>!`);
   print();
   await sleep(160);
   for (const [kind, t] of bootUnits()) {
@@ -97,7 +94,7 @@ function banner() {
   print();
 }
 
-const fmtLogin = (d) => d.toLocaleString('en-US', { timeZone: 'Europe/Helsinki', weekday: 'short', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit', year: 'numeric', hour12: false }).replace(/,/g, '');
+const fmtLogin = (d) => d.toLocaleString('en-US', { timeZone: TZ, weekday: 'short', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit', year: 'numeric', hour12: false }).replace(/,/g, '');
 
 async function login(last) {
   const l = print(`${esc(m.host)} login: <span class="typed echo"></span>`);
@@ -105,7 +102,7 @@ async function login(last) {
   await sleep(250);
   print(`Password: ${dim('(automatic login for guests)')}`);
   await sleep(300);
-  print(`Linux ${esc(m.host)} ${esc(m.kernel)} #1 SMP PREEMPT_DYNAMIC PMX ${esc(pmx)} x86_64`);
+  print(`Linux ${esc(m.host)} ${esc(m.kernel)} ${esc(KERNEL_BUILD)} x86_64`);
   print();
   print(dim('The programs included with the Debian GNU/Linux system are free software;\nthe exact distribution terms for each program are described in the\nindividual files in /usr/share/doc/*/copyright.'));
   print();

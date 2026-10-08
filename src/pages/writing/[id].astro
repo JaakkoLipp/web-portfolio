@@ -2,6 +2,7 @@
 import Page from '../../layouts/Page.astro';
 import { render } from 'astro:content';
 import { getPosts, fmtDate, type Post } from '../../lib/content';
+import { page } from '../../lib/site';
 
 export async function getStaticPaths() {
   const posts = await getPosts();
@@ -25,5 +26,5 @@ const d = entry.data;
     <Content />
   </article>
   <hr />
-  <p><a href="/writing">All posts</a></p>
+  <p><a href={page('writing').path}>All posts</a></p>
 </Page>

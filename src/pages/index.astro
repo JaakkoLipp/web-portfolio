@@ -3,6 +3,7 @@ import Base from '../layouts/Base.astro';
 import '../styles/terminal.css';
 import { site } from '../site.config';
 import { getTerminalData, toScriptJson } from '../lib/terminal-data';
+import { SHELL } from '../lib/site';
 
 const data = await getTerminalData();
 const { owner, links, pages } = site;
@@ -55,7 +56,7 @@ const { owner, links, pages } = site;
 
     <div id="bottom">
       <div id="status">
-        <span><span class="win">0:jsh*</span>[{site.domain.split('.')[0]}]</span>
+        <span><span class="win">0:{SHELL}*</span>[{site.brand}]</span>
         <span id="statusMid"></span>
         <span id="clock"></span>
       </div>

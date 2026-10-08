@@ -1,13 +1,13 @@
 ---
 import Page from '../../layouts/Page.astro';
-import { getProjects, fmtDate } from '../../lib/content';
-import { page } from '../../lib/pages';
+import { getProjects, fmtDate, projectPath } from '../../lib/content';
+import { page } from '../../lib/site';
 
 const info = page('projects');
 const projects = await getProjects();
 ---
 
-<Page title={info.title} description={info.blurb} path="~/projects">
+<Page title={info.title} description={info.blurb} path={`~/${info.id}`}>
   <h1>{info.title}</h1>
   <p class="lead">{info.blurb}</p>
   <ul class="entries">
@@ -15,10 +15,10 @@ const projects = await getProjects();
       <li>
         <div class="entry-head">
           <span class="entry-title">
-            <a href={`/projects/${p.id}`}>{p.data.title}</a>
+            <a href={projectPath(p.id)}>{p.data.title}</a>
           </span>
           <span class="entry-meta">
-            {p.data.status && <span class={`status-${p.data.status}`}>{p.data.status}</span>}
+            {p.data.status && <span class={`st-${p.data.status}`}>{p.data.status}</span>}
             {p.data.status && p.data.date && ' · '}
             {p.data.date && <time datetime={fmtDate(p.data.date)}>{fmtDate(p.data.date)}</time>}
           </span>

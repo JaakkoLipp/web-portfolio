@@ -1,0 +1,26 @@
+---
+/* Simple pages: one Markdown file in src/content/pages/ per page id in site.config.ts. */
+import Page from '../layouts/Page.astro';
+import { getCollection, render, type CollectionEntry } from 'astro:content';
+import { OWN_ROUTES, page } from '../lib/site';
+import { site } from '../site.config';
+
+export async function getStaticPaths() {
+  const entries = await getCollection('pages');
+  /* Fail the build early when a page in the config has nothing to render. */
+  const missing = site.pages.filter((p) => !OWN_ROUTES.includes(p.id) && !entries.some((e) => e.id === p.id));
+  if (missing.length) throw new Error(`Add src/content/pages/<id>.md for: ${missing.map((p) => p.id).join(', ')}`);
+  return entries.map((entry) => ({ params: { page: entry.id }, props: { entry } }));
+}
+
+interface Props { entry: CollectionEntry<'pages'> }
+const { entry } = Astro.props;
+const info = page(entry.id);
+const { Content } = await render(entry);
+---
+
+<Page title={info.title} description={info.blurb} path={`~/${info.id}`}>
+  <h1>{info.title}</h1>
+  <p class="lead">{info.blurb}</p>
+  <Content />
+</Page>

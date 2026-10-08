@@ -1,5 +1,5 @@
 /* htop overlay with simulated values. Processes come from the services list. */
-import { D, S, el, esc, hashNum, rand } from './state.js';
+import { D, S, SH, el, esc, pidOf, rand } from './state.js';
 
 const fmtSize = (gib) => (gib >= 1 ? `${gib.toFixed(1)}G` : `${Math.max(1, Math.round(gib * 1024))}M`);
 
@@ -9,7 +9,7 @@ function makeProcs() {
     const mem = s.mem ?? 0.2;
     const res = (mem / 100) * total;
     return {
-      pid: 300 + (hashNum(s.unit) % 3700),
+      pid: pidOf(s.unit),
       user: s.user.slice(0, 8),
       cmd: s.cmd,
       cpu: s.cpu ?? 1,
@@ -21,7 +21,7 @@ function makeProcs() {
       time: (s.cpu ?? 1) * 290,
     };
   });
-  procs.push({ pid: 4096, user: D.machine.user.slice(0, 8), cmd: D.machine.shell.split(' ')[0], cpu: 0.3, max: 2, step: 0.3, mem: 0, virt: '20M', res: '8M', time: 2 });
+  procs.push({ pid: 4096, user: D.machine.user.slice(0, 8), cmd: SH, cpu: 0.3, max: 2, step: 0.3, mem: 0, virt: '20M', res: '8M', time: 2 });
   return procs;
 }
 

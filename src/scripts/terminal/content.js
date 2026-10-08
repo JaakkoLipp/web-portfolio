@@ -1,6 +1,7 @@
 /* Builders for the bigger blocks of output: logo, fastfetch, git log, help, man page, projects. */
-import { D, RM, S, T0, ago, dim, el, esc, link, print, printText, sleep } from './state.js';
-import { findProject, resolve } from './fs.js';
+import { shortUrl } from '../../lib/format';
+import { D, MAN, PAGE_IDS, RM, S, T0, ago, dim, el, esc, link, print, printText, readMore, sleep } from './state.js';
+import { resolve } from './fs.js';
 
 /* JL logo, option C (shadow block). Block and shadow layers are split so the gradient only hits the blocks. */
 const LOGO_BLOCK = [
@@ -23,7 +24,7 @@ const LOGO_SHADOW = [
 function logoHTML() {
   return `<div class="logo live" aria-hidden="true">
     <div class="logo-mark"><pre class="lg-block">${LOGO_BLOCK}</pre><pre class="lg-shadow">${LOGO_SHADOW}</pre></div>
-    <div class="lg-word">${esc(D.domain.split('.')[0])}<span class="lg-cur">▌</span></div>
+    <div class="lg-word">${esc(D.brand)}<span class="lg-cur">▌</span></div>
   </div>`;
 }
 
@@ -37,6 +38,7 @@ const SWATCH_1 = ['--bg-3', '--love', '--pine', '--gold', '--accent', '--iris', 
 const SWATCH_2 = ['--faint', '--love', '--pine', '--gold', '--accent', '--iris', '--rose', '--fg'];
 
 export function fetchHTML() {
+  /* Only the newest logo on screen animates. */
   el.out.querySelectorAll('.logo.live').forEach((n) => n.classList.remove('live'));
   const { machine: m, owner: o } = D;
   const rows = [
@@ -74,18 +76,18 @@ export function printLog(n = 5) {
   if (!D.log.length) print(dim('fatal: your current branch has no commits yet'));
 }
 
-const firstProject = () => D.projects[0]?.id ?? 'projects';
-const HELP = () => [
-  ['Pages', [['open <page>', `go to ${D.pages.map((p) => p.id).join(', ')}`], ['contact', 'how to reach me']]],
-  ['Projects', [['ls ~/projects', 'every project is a program here'], [`${firstProject()}`, 'run one. Try --help too']]],
+/* The help screen: [group, [[command, description], ...]]. Clicking a command runs its first word. */
+const HELP = [
+  ['Pages', [['open <page>', `go to ${PAGE_IDS}`], ['contact', 'how to reach me']]],
+  ['Projects', [['ls ~/projects', 'every project is a program here'], [D.projects[0]?.id ?? 'ls ~/projects', 'run one. Try --help too']]],
   ['Files', [['ls [dir]', 'list files (-a also shows hidden ones)'], ['cd <dir>', 'change directory'], ['cat <file>', 'print a file']]],
-  ['About', [['fastfetch', 'summary card'], [`man ${manName()}`, 'the manual page'], ['git log', 'recent work'], ['htop', 'process view (simulated)']]],
+  ['About', [['fastfetch', 'summary card'], [`man ${MAN}`, 'the manual page'], ['git log', 'recent work'], ['htop', 'process view (simulated)']]],
   ['Shell', [['history', 'previous commands'], ['clear', 'clear the screen'], ['whoami, uname -a, date, uptime', 'the usual']]],
 ];
 
 export function printHelp(title) {
   if (title) printText(title);
-  for (const [g, rows] of HELP()) {
+  for (const [g, rows] of HELP) {
     print(`<span class="grp">${g}</span>`, 'block');
     const cells = rows.map(([c, d]) => {
       const run = /[<[,]/.test(c) ? c.split(/ <| \[|,/)[0] : c;
@@ -97,12 +99,10 @@ export function printHelp(title) {
   print(dim('Some commands are not on this list.'));
 }
 
-export const manName = () => D.owner.short.toLowerCase();
-
 export function manHTML() {
   const d = new Date();
   const ym = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-  const NAME = manName().toUpperCase();
+  const NAME = MAN.toUpperCase();
   const m = D.man;
   const opt = (o) => `<dt>${esc(o.flag)}</dt><dd>${esc(o.text)}${o.see ? ` See ${link(esc(o.see.label), o.see.cmd)}.` : ''}</dd>`;
   return `<div class="man">
@@ -143,32 +143,34 @@ export async function runProject(p, args = []) {
   if (p.context) rows.push(['context', esc(p.context)]);
   if (p.status) rows.push(['status', `<span class="st-${esc(p.status)}">${esc(p.status)}</span>`]);
   if (p.stack.length) rows.push(['stack', esc(p.stack.join(', '))]);
-  for (const l of p.links) rows.push([l.label.toLowerCase(), `<a class="lnk" href="${esc(l.url)}" target="_blank" rel="noopener">${esc(l.url.replace(/^https?:\/\/(www\.)?/, ''))}</a>`]);
+  for (const l of p.links) rows.push([l.label.toLowerCase(), `<a class="lnk" href="${esc(l.url)}" target="_blank" rel="noopener">${esc(shortUrl(l.url))}</a>`]);
   if (rows.length) print(rows.map(([k, v]) => `  <span class="k">${esc(k.padEnd(8))}</span> ${v}`).join('\n'));
-  print(`${dim('Read more: ')}${link(esc('open ' + p.path), 'open ' + p.path, p.path)}`);
+  readMore(p.path);
 }
 
 /* ---------------- Navigation ---------------- */
+/* A page by id or alias (site.config.ts `aliases`). */
+export const findPage = (name) => D.pages.find((p) => p.id === name || p.aliases?.includes(name));
+
+/* Every name `open` understands: '/', page ids, aliases and paths, project and post ids and paths. */
+const ROUTES = new Map([
+  ['/', '/'],
+  ...D.pages.flatMap((p) => [p.id, p.path, ...(p.aliases ?? [])].map((k) => [k, p.path])),
+  ...[...D.projects, ...D.posts].flatMap((e) => [[e.id, e.path], [e.path, e.path]]),
+]);
+
+/* `open` also takes file system paths, like ~/projects/homelab or writing/post.md. */
 function routeFor(name) {
-  const key = name.replace(/^~\//, '').replace(/\/$/, '').replace(/\.md$/, '');
-  const page = D.pages.find((p) => p.id === key || p.path === key);
-  if (page) return page.path;
-  if (name === '/' || name === '~') return '/';
-  const all = [...D.projects, ...D.posts];
-  const hit = all.find((e) => e.id === key || e.path === key);
-  if (hit) return hit.path;
-  const r = resolve(name);
-  if (r?.node.route) return r.node.route;
-  if (r?.node.type === 'exe') return r.node.project.path;
-  return null;
+  const key = name.replace(/^~\/?/, '').replace(/\/$/, '').replace(/\.md$/, '') || '/';
+  const node = resolve(name)?.node;
+  return ROUTES.get(key) ?? node?.route ?? node?.project?.path ?? null;
 }
 
 export function openPage(name) {
-  if (!name) { printText(`usage: open <page>   (${D.pages.map((p) => p.id).join(', ')}, or a project)`); return; }
+  if (!name) { printText(`usage: open <page>   (${PAGE_IDS}, or a project)`); return; }
   const route = routeFor(name);
   if (!route) { printText(`open: ${name}: no such page`, 'err'); return; }
   print(`Opening <span class="pd">${esc(D.domain + route)}</span>`);
   location.href = route;
 }
 
-export { findProject };

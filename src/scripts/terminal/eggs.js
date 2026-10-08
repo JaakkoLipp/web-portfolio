@@ -1,80 +1,20 @@
-/* Easter egg engines. */
-import { D, RM, S, dim, esc, hashNum, print, printText, rand, scroll, sleep, typeInto, wait } from './state.js';
+/*
+  Easter eggs: jokes and toys. Exports EGGS (commands), PHRASES (whole-line matches)
+  and vimInput (the vim mode). Add a new egg here and nowhere else.
+*/
+import { D, RM, S, SH, clear, dim, esc, link, print, printText, progress, rand, scroll, sleep, wait } from './state.js';
+import { printHelp } from './content.js';
+import { apt, aptInstallHooks } from './system.js';
 
-export async function progress(label, width = 20, step = 55) {
-  const d = print('');
-  for (let i = 0; i <= width; i++) {
-    d.innerHTML = `${esc(label.padEnd(16))} [${'#'.repeat(i)}${'-'.repeat(width - i)}] ${String(Math.round((i / width) * 100)).padStart(3)}%`;
-    scroll();
-    if (i < width) await sleep(step);
-    if (S.cancel) return false;
-  }
-  return true;
-}
-
-/* ---------------- apt (Proxmox is Debian underneath) ---------------- */
-async function aptLockError() {
-  printText('E: Could not open lock file /var/lib/apt/lists/lock - open (13: Permission denied)', 'err');
-  printText('E: Unable to lock directory /var/lib/apt/lists/', 'err');
-  await sleep(500);
-  print(dim('Running a pretend one for guests instead.'));
-  await sleep(400);
-}
-
-export async function aptUpdate({ root = false } = {}) {
-  if (!root) await aptLockError();
-  const repos = [
-    ['Hit:1', 'http://deb.debian.org/debian trixie InRelease'],
-    ['Hit:2', 'http://security.debian.org/debian-security trixie-security InRelease'],
-    ['Get:3', 'http://download.proxmox.com/debian/pve trixie InRelease [2,771 B]'],
-    ['Get:4', 'http://download.proxmox.com/debian/pve trixie/pve-no-subscription amd64 Packages [312 kB]'],
-  ];
-  for (const [k, r] of repos) {
-    if (S.cancel) return;
-    printText(`${k} ${r}`);
-    await sleep(rand(120, 320));
-  }
-  printText('Fetched 315 kB in 1s (412 kB/s)');
-  printText('Reading package lists... Done');
-  await sleep(200);
-  printText('Building dependency tree... Done');
-  printText("3 packages can be upgraded. Run 'apt list --upgradable' to see them.");
-}
-
-export async function aptUpgrade({ root = false } = {}) {
-  if (!root) await aptLockError();
-  printText('Reading package lists... Done');
-  await sleep(250); printText('Building dependency tree... Done');
-  await sleep(150); printText('Calculating upgrade... Done');
-  printText('The following packages will be upgraded:\n  coffee curiosity sisu');
-  printText('3 upgraded, 0 newly installed, 0 to remove and 0 not upgraded.');
-  const q = print('Do you want to continue? [Y/n] <span class="typed echo"></span>');
-  await sleep(600); await typeInto(q.querySelector('.typed'), 'y');
-  const pkgs = [['coffee', '26.10-1'], ['curiosity', '2.1-1'], ['sisu', '1.0-2']];
-  for (const [i, [p]] of pkgs.entries()) {
-    if (!await progress(`Get:${i + 1} ${p}`, 20, 40)) return;
-  }
-  for (const [p, v] of pkgs) {
-    if (S.cancel) return;
-    printText(`Setting up ${p} (${v}) ...`);
-    await sleep(160);
-  }
-  printText('Processing triggers for man-db (2.13.1-1) ...');
-  await sleep(300);
-  printText(`Reminding ${D.machine.user} to read the Proxmox release notes... done`);
-}
-
-export function aptList() {
-  ['coffee/stable,now 26.10-1 amd64 [installed]', 'curiosity/stable,now 2.0-1 amd64 [installed]', `${D.machine.shell.split(' ')[0]}/stable,now 1.0-1 amd64 [installed]`, 'proxmox-ve/stable,now 9.0.0 all [installed]', 'sisu/stable,now 1.0-1 amd64 [installed]', 'vim/stable,now 2:9.1-1 amd64 [installed]']
-    .forEach((p) => printText(p));
-}
+const m = D.machine;
+const readOnly = (c, a) => printText(`${c}: cannot modify '${a.filter((x) => !x.startsWith('-')).pop() || ''}': Read-only file system`, 'err');
 
 /* ---------------- rm -rf / ---------------- */
-export async function fakeWipe() {
-  print(`[sudo] password for ${esc(D.machine.user)}: `);
+async function fakeWipe() {
+  print(`[sudo] password for ${esc(m.user)}: `);
   await sleep(700);
-  const home = `/home/${D.machine.user}`;
-  const files = ['/boot/vmlinuz-' + D.machine.kernel, '/etc/fstab', '/etc/pve/storage.cfg', '/usr/bin/jsh', '/var/log/journal', `${home}/projects`, `${home}/.bash_history`, `${home}/sense-of-humour`];
+  const home = `/home/${m.user}`;
+  const files = [`/boot/vmlinuz-${m.kernel}`, '/etc/fstab', '/etc/pve/storage.cfg', `/usr/bin/${SH}`, '/var/log/journal', `${home}/projects`, `${home}/.bash_history`, `${home}/sense-of-humour`];
   for (const f of files) {
     if (S.cancel) return;
     printText(`removed '${f}'`, 'dim');
@@ -93,7 +33,7 @@ const TRAIN = String.raw`      ~  ~   ~
   |_________|__||______________|_|______________|
    (O)   (O)      (O)      (O)     (O)      (O)`;
 
-export async function sl() {
+async function sl() {
   const wrap = print('', 'trainwrap');
   const pre = document.createElement('pre');
   pre.className = 'train';
@@ -124,11 +64,11 @@ const MOOSE = String.raw`     \
                 \_/  |  |-----|  |
                      |  |     |  |`;
 
-export function moosesay(msg) {
+function moosesay(msg) {
   msg = (msg || 'Moi.').slice(0, 200);
-  const words = msg.split(/\s+/), lines = [];
+  const lines = [];
   let cur = '';
-  for (const w of words) {
+  for (const w of msg.split(/\s+/)) {
     if ((cur + ' ' + w).trim().length > 34) { lines.push(cur); cur = w; } else cur = (cur + ' ' + w).trim();
   }
   if (cur) lines.push(cur);
@@ -139,13 +79,13 @@ export function moosesay(msg) {
   });
   printText([' ' + '_'.repeat(W + 2), ...body, ' ' + '-'.repeat(W + 2), MOOSE].join('\n'));
 }
+const argText = (line) => line.trim().split(/\s+/).slice(1).join(' ');
 
 /* ---------------- matrix ---------------- */
-export async function matrix() {
+async function matrix() {
   if (RM) { printText('Reduced motion is on, so the rain stays off.', 'dim'); return; }
   const css = getComputedStyle(document.documentElement);
-  const color = (v) => css.getPropertyValue(v).trim();
-  const [fg, accent, iris, bg] = [color('--rp-text'), color('--rp-foam'), color('--rp-iris'), color('--rp-base')];
+  const [fg, accent, iris, bg] = ['--fg', '--accent', '--iris', '--bg'].map((v) => css.getPropertyValue(v).trim());
   const c = document.createElement('canvas');
   c.className = 'matrix';
   c.setAttribute('aria-hidden', 'true');
@@ -189,7 +129,7 @@ export async function matrix() {
 }
 
 /* ---------------- Finnish things ---------------- */
-export async function sauna() {
+async function sauna() {
   printText('Heating the kiuas (sauna stove)...');
   const d = print('');
   for (let t = 20; t <= 80; t += 4) {
@@ -211,80 +151,112 @@ const CUP = String.raw`    ( (
   \      /
    '----'`;
 
-export async function brew() {
+async function brew() {
   printText('Brewing kahvi...');
   if (!await progress('kahvinkeitin', 20, 70)) return;
   print(`<pre class="art cup">${esc(CUP)}</pre>`, 'block');
   printText('Finns drink more coffee per person than almost any other country. Kahvi on valmis.');
 }
 
-/* ---------------- Network toys. Addresses are documentation or private ranges. ---------------- */
-export async function ping(args) {
-  const self = D.machine.host;
-  const h = args.find((x) => !x.startsWith('-')) || self;
-  const ips = { [self]: D.machine.consoleIp, [D.domain]: D.machine.consoleIp, localhost: '127.0.0.1', homelab: '10.10.0.2' };
-  const ip = ips[h];
-  if (!ip) { printText(`ping: ${h}: Name or service not known`, 'err'); return; }
-  printText(`PING ${h} (${ip}) 56(84) bytes of data.`);
-  const base = h === 'homelab' ? 7.8 : 0.04;
-  const times = [];
-  for (let i = 1; i <= 4; i++) {
-    if (S.cancel) break;
-    const t = +(base + Math.random() * base * 0.6).toFixed(3);
-    times.push(t);
-    printText(`64 bytes from ${h} (${ip}): icmp_seq=${i} ttl=64 time=${t.toFixed(3)} ms`);
-    if (i < 4) await sleep(700);
+/* `apt install coffee` and friends. */
+Object.assign(aptInstallHooks, { coffee: brew, kahvi: brew, sauna });
+
+/* ---------------- vim ---------------- */
+function vim() {
+  S.mode = 'vim';
+  for (let i = 0; i < 4; i++) print('<span class="tilde">~</span>');
+  print(dim('"[No Name]" 0L, 0B'));
+  print(dim('You are in vim now. Type :q and press Enter to leave.'));
+}
+
+/* Input handling while S.mode is 'vim'. */
+export function vimInput(line) {
+  const t = line.trim();
+  const c = t.startsWith(':') ? t : ':' + t;
+  if ([':q', ':q!', ':wq', ':wq!', ':x', ':qa', ':qa!'].includes(c) || t === 'ZZ') {
+    S.mode = 'sh';
+    printText('You escaped vim. Few do.');
+    return;
   }
-  print();
-  printText(`--- ${h} ping statistics ---`);
-  printText(`${times.length} packets transmitted, ${times.length} received, 0% packet loss`);
-  if (times.length) {
-    const avg = times.reduce((x, y) => x + y, 0) / times.length;
-    printText(`rtt min/avg/max = ${Math.min(...times).toFixed(3)}/${avg.toFixed(3)}/${Math.max(...times).toFixed(3)} ms`);
-  }
+  if (c === ':help') { printText('Type :q to quit. That is the whole tutorial.'); return; }
+  printText(`E492: Not an editor command: ${c.slice(1)}`, 'err');
 }
 
-/* ---------------- Hardware toys (simulated) ---------------- */
-const row = (s) => `| ${s.padEnd(75).slice(0, 75)} |`;
-const line = (c = '-') => `+${c.repeat(77)}+`;
+/* ---------------- Commands ---------------- */
+const notHere = (name, why) => { printText(`${SH}: ${name}: command not found`, 'err'); print(why); };
+const moi = () => printText('Moi! Finnish works here too. Try: apua');
+const btw = () => printText('Not on this box. Proxmox, btw.');
+const pacman = () => notHere('pacman', `${dim('This is Proxmox, so Debian underneath. Try: ')}${link('apt update', 'apt update')}`);
+const notVim = () => printText('You are not in vim. The reflex is strong, though.');
+const hello = () => printText('Hello. Type help to see what this shell can do.');
 
-export function nvidiaSmi() {
-  const g = D.machine.gpu;
-  const procs = D.services.filter((s) => s.gpu);
-  const util = Math.round(rand(82, 97)), temp = Math.round(rand(63, 71)), pwr = Math.round(rand(290, 340));
-  const used = Math.round(g.memMiB * rand(0.88, 0.91));
-  const t = [
-    line(),
-    row(`NVIDIA-SMI ${g.driver}`.padEnd(24) + `Driver Version: ${g.driver}`.padEnd(29) + `CUDA Version: ${g.cuda}`),
-    '|-------------------------------+----------------------+----------------------+',
-    '| GPU  Name        Persistence-M| Bus-Id        Disp.A | Volatile Uncorr. ECC |',
-    '| Fan  Temp  Perf  Pwr:Usage/Cap|         Memory-Usage | GPU-Util  Compute M. |',
-    '|===============================+======================+======================|',
-    `|   0  ${g.name.padEnd(18).slice(0, 18)} On    | 00000000:01:00.0 Off |                  N/A |`,
-    `| 61%   ${temp}C    P2   ${pwr}W / 350W |${`${used}MiB / ${g.memMiB}MiB `.padStart(22)}|${`${util}%`.padStart(8)}      Default |`,
-    '+-------------------------------+----------------------+----------------------+',
-    row('Processes:'),
-    row(' GPU    PID   Type   Process name                             GPU Memory'),
-    ...(procs.length ? procs : [{ unit: 'idle', cmd: 'No running processes found' }]).map((s) =>
-      s.unit === 'idle' ? row(`  ${s.cmd}`) : row(`   0   ${String(300 + (hashNum(s.unit) % 3700)).padStart(5)}      C   ${s.cmd.padEnd(38).slice(0, 38)} ${`${used - 120}MiB`.padStart(9)}`),
-    ),
-    line(),
-  ].join('\n');
-  print(`<div class="scroll-x"><pre>${esc(t)}</pre></div>`, 'block');
-  print(dim('(simulated, from the homelab GPU node)'));
-}
+export const EGGS = {
+  apua: () => printHelp('Apua tulossa. (Help is on the way.)'),
+  cls: () => { clear(); print(dim('cls: this is not Windows. Cleared anyway.')); },
+  sudo: async (a) => {
+    if (!a.length) { printText('usage: sudo <command>'); return; }
+    print(`[sudo] password for ${esc(m.user)}: `);
+    await sleep(1100);
+    printText(`${m.user} is not in the sudoers file. This incident will be reported.`, 'err');
+    await sleep(500);
+    print(dim('Reported to: nobody. Relax.'));
+    if ((a[0] === 'apt' || a[0] === 'apt-get') && !S.cancel) {
+      await sleep(400);
+      print(dim('Running a pretend one for guests instead.'));
+      await sleep(300);
+      await apt(a.slice(1), { root: true });
+    }
+  },
+  su: () => printText('su: Authentication failure', 'err'),
+  please: () => printText('Manners noted. Still no root.'),
+  rm: (a) => (a.length ? readOnly('rm', a) : printText('rm: missing operand', 'err')),
+  ...Object.fromEntries(['mkdir', 'touch', 'mv', 'cp', 'chmod', 'chown'].map((c) => [c, (a) => readOnly(c, a)])),
+  kill: () => printText('kill: guests cannot kill processes. htop shows them, though.', 'err'),
+  pacman, yay: () => notHere('yay', dim('No AUR on Debian. There is a backports repo, though.')),
+  paru: () => notHere('paru', dim('No AUR on Debian. There is a backports repo, though.')),
+  vim, vi: vim, nvim: vim,
+  emacs: () => printText('emacs: not installed. A fine operating system, though. Try vim.'),
+  nano: () => printText('nano: a sensible choice. Also not installed.'),
+  ':q': notVim, ':wq': notVim, q: notVim,
+  sl,
+  cowsay: (_a, line) => { print(dim('No cows here. A moose volunteered.')); moosesay(argText(line) || 'Moo.'); },
+  moosesay: (_a, line) => moosesay(argText(line)),
+  matrix, cmatrix: matrix,
+  sauna, löyly: sauna, loyly: sauna,
+  kahvi: brew, coffee: brew,
+  make: (a) => {
+    if (!a.length) { printText('make: *** No targets specified and no makefile found.  Stop.', 'err'); return; }
+    printText(`make: *** No rule to make target '${a[0]}'.  Stop.`, 'err');
+    if (a.join(' ') === 'coffee') print(dim('Try: kahvi'));
+  },
+  sisu: () => printText('sisu (n.), Finnish: grit that shows up when the easy options are gone.\nAlso how this site got finished.'),
+  moi, hei: moi, terve: moi, moikka: moi, moro: moi,
+  kiitos: () => printText('Ole hyvä.'),
+  thanks: () => printText("You're welcome."),
+  turku: () => printText('Turku: the oldest city in Finland and its former capital.\nThis terminal has a Turku accent. Mää ja sää.'),
+  fortune: () => printText(D.fortunes[Math.floor(Math.random() * D.fortunes.length)]),
+  xyzzy: () => printText('Nothing happens.'),
+  42: () => printText('Correct answer. The question is still in code review.'),
+  hello, hi: hello,
+  btw,
+  theme: (a) => {
+    if (a[0] === 'dawn' || a[0] === 'light') { printText('Rosé Pine Dawn exists. Helsinki in December has very little dawn.'); return; }
+    printText('Rosé Pine, main variant. There is only dark mode here.\nHelsinki gets less than six hours of daylight in December.');
+  },
+  light: () => EGGS.theme(['light']),
+};
 
-export function dockerPs() {
-  const rows = D.services.filter((s) => s.image).map((s) => [
-    hashNum(s.unit).toString(16).padStart(8, '0') + hashNum(s.image).toString(16).padStart(8, '0').slice(0, 4),
-    s.image,
-    s.uptime ?? 'Up 1 day',
-    s.unit,
-  ]);
-  if (!rows.length) { printText('CONTAINER ID   IMAGE   STATUS   NAMES'); return; }
-  const head = ['CONTAINER ID', 'IMAGE', 'STATUS', 'NAMES'];
-  const w = [0, 1, 2].map((i) => Math.max(head[i].length, ...rows.map((r) => r[i].length)) + 3);
-  const fmt = (r) => r.map((c, i) => (i < 3 ? c.padEnd(w[i]) : c)).join('');
-  print(`<div class="scroll-x"><pre>${esc(fmt(head))}\n${rows.map((r) => esc(fmt(r))).join('\n')}</pre></div>`, 'block');
-  print(dim('(simulated)'));
-}
+/* Whole-line matches, checked before normal commands. Keys are lowercase with single spaces. */
+const rmRoot = () => { printText("rm: it is dangerous to operate recursively on '/'", 'err'); printText('rm: use --no-preserve-root to override this failsafe', 'err'); };
+export const PHRASES = {
+  'sudo rm -rf /': fakeWipe,
+  'sudo rm -rf / --no-preserve-root': fakeWipe,
+  'sudo rm -rf --no-preserve-root /': fakeWipe,
+  'rm -rf / --no-preserve-root': fakeWipe,
+  'rm -rf --no-preserve-root /': fakeWipe,
+  'rm -rf /': rmRoot,
+  'sudo make me a sandwich': () => printText('Okay.'),
+  'make me a sandwich': () => printText('What? Make it yourself.'),
+  'i use arch btw': btw,
+  'sudo pacman -syu': pacman,
+};
