@@ -65,13 +65,13 @@ Create `src/content/writing/<id>.md` with `title`, `description` and `date`. Set
 
 ## Deploy
 
-Pushing to `main` runs `.github/workflows/deploy.yml`: build, check, rsync `dist/` to a new release folder on the VPS, switch the `/var/www/portfolio/current` symlink, then fetch `https://jaalip.com/version.txt` to prove the new release is live. You can also run it by hand from the Actions tab.
+Pushing to `main` runs `.github/workflows/deploy.yml`: build, check, upload `dist/` to the VPS as a new release, switch to it, then fetch `https://jaalip.com/version.txt` to prove the new release is live. You can also run it by hand from the Actions tab.
 
-It needs these repository secrets: `VPS_HOST`, `VPS_PORT`, `VPS_USER`, `VPS_SSH_KEY`.
+It needs these repository secrets: `VPS_HOST`, `VPS_PORT`, `VPS_USER`, `VPS_SSH_KEY`, `VPS_KNOWN_HOSTS`.
 
 Pull requests run `.github/workflows/ci.yml` (build and checks only).
 
-See `docs/deploy.md` for rollback, the web server setup and a known routing issue.
+See `docs/deploy.md` for the secrets and rollback.
 
 ## Project docs
 
@@ -82,5 +82,5 @@ See `docs/deploy.md` for rollback, the web server setup and a known routing issu
 | `docs/design-defaults.md` | Every design default in plain text |
 | `docs/decisions/` | Dated decision records |
 | `docs/reference/jaalip-tty.html` | The original prototype the terminal was ported from |
-| `docs/deploy.md` | Deploy pipeline, rollback and web server setup |
+| `docs/deploy.md` | Deploy pipeline, secrets and rollback |
 | `docs/fonts.md` | How the fonts are built |
